@@ -294,6 +294,9 @@ func show_popup_menu(p_position : Vector2, p_node : GraphEditorNode):
 	popup_menu.clear()
 	popup_menu.rect_size = Vector2()
 	
+	if p_node == null:
+		clear_selection()
+
 	if selection.size() == 0:
 		popup_menu.add_item("New state", CREATE_NEW_STATE)
 		

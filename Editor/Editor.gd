@@ -267,7 +267,8 @@ func set_active_state_machine(p_state_machine : StateMachine):
 		return
 
 	self.disabled = false
-
+	emit_signal("attention_request")
+	
 	if active_state_machine.graph == null:
 		return
 
@@ -278,8 +279,6 @@ func set_active_state_machine(p_state_machine : StateMachine):
 	graph_editor.populate_graph(active_state_machine.graph)
 
 	graph_editor.snapping_enabled = snap_toggle.pressed
-
-	emit_signal("attention_request")
 
 func set_start_state(p_state_node : GraphEditorStateNode):
 	if active_state_machine == null:
