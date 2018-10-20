@@ -1,7 +1,6 @@
 tool
 extends Line2D
 
-const LineTexture = preload("Textures/Transition.png")
 const LineTextureMode = Line2D.LINE_TEXTURE_TILE
 const LineColor = Color.whitesmoke
 
@@ -13,13 +12,32 @@ var curvature : float = 0.5 setget set_curvature
 var from_position : Vector2 = Vector2() setget set_from_position
 var to_position : Vector2 = Vector2() setget set_to_position
 
-func _enter_tree():
-	texture = LineTexture
+func _init():
+	create_texture()
 	texture_mode = LineTextureMode
 	default_color = LineColor
 	
 	curve = Curve2D.new()
 	curve.bake_interval = 8
+
+func create_texture():
+	var image = Image.new()
+	image.create(6, 6, false, Image.FORMAT_LA8)
+
+	image.lock()
+
+	for x in 6:
+		image.set_pixel(x, 1, Color.darkgray)
+		image.set_pixel(x, 2, Color.white)
+		image.set_pixel(x, 3, Color.white)
+		image.set_pixel(x, 4, Color.darkgray)
+
+	image.unlock()
+
+	var image_texture = ImageTexture.new()
+	image_texture.create_from_image(image)
+
+	texture = image_texture
 	
 func set_curvature(p_curvature : float):
 	curvature = p_curvature

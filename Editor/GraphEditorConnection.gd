@@ -17,6 +17,7 @@ signal reconnect_requested(p_transition, p_from_slot_index, p_to_slot_index)
 signal remove_requested(p_transition)
 
 func initialize(p_width : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int):
+	create_texture()
 	width = p_width
 	
 	from_node = p_from
