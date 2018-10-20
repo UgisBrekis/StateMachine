@@ -15,8 +15,10 @@ func on_start(p_args = []):
 	tween_node = get_parent().get_node(tween) as Tween
 	color_rect = get_parent().get_node(colorRect) as ColorRect
 	
+	# Default color from which tween is gonna interpolate
 	var from_color = Color.black
 	
+	# If previous state invoked transition with color argument, use that color
 	if p_args.size() == 1:
 		from_color = p_args[0]
 		
