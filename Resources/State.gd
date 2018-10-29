@@ -5,7 +5,9 @@ export(String) var name = "New state" setget set_state_name
 export(GDScript) var state_script = null setget set_state_script
 
 var offset = Vector2()
-var properties = []
+var properties = {}
+
+var property_cache = []
 
 # Signals
 signal renamed
@@ -40,7 +42,7 @@ func _get_property_list():
 	
 	property_list.push_back({
 		"name" : "properties",
-		"type" : TYPE_ARRAY,
+		"type" : TYPE_DICTIONARY,
 		"usage" : PROPERTY_USAGE_STORAGE
 	})
 	

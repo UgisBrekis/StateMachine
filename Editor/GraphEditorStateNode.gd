@@ -69,28 +69,18 @@ func update_outputs():
 	for property in instance.get_property_list():
 		if property.usage & PROPERTY_USAGE_DEFAULT && property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
 			instance_property_list.push_back(property.duplicate())
+			
+	# Update cache
+	state.property_cache = instance_property_list
 	
-	# Update
-	for instance_property in instance_property_list:
-		var property_index = -1
-
-		for i in state.properties.size():
-			if state.properties[i].name == instance_property.name:
-				property_index = i
-
-		if property_index == -1:
-			# Create property
-			instance_property["value"] = null
-
+	# Apply values?
+	for cached_item in state.property_cache:
+		if !state.properties.has(cached_item.name):
+			state.properties[cached_item.name] = null
+			
 		else:
-			# Update property
-			if state.properties[property_index].type != instance_property.type:
-				instance_property["value"] = instance.get(instance_property.name)
-
-			else:
-				instance_property["value"] = state.properties[property_index].value
-
-	state.properties = instance_property_list
+			if typeof(state.properties[cached_item.name]) != cached_item.type:
+				state.properties[cached_item.name] = instance.get(cached_item.name)
 
 	if "transitions" in instance:
 		if typeof(instance.transitions) != TYPE_DICTIONARY:

@@ -25,9 +25,9 @@ func _set(property, value):
 		
 	if graph != null:
 		if graph.selected_state != null:
-			for i in graph.selected_state.properties.size():
-				if property == "State properties/%s" % [graph.selected_state.properties[i].name]:
-					graph.selected_state.properties[i].value = value
+			for cached_item in graph.selected_state.property_cache:
+				if property == "State properties/%s" % [cached_item.name]:
+					graph.selected_state.properties[cached_item.name] = value
 					return true
 	
 func _get(property):
@@ -36,9 +36,9 @@ func _get(property):
 	
 	if graph != null:
 		if graph.selected_state != null:
-			for i in graph.selected_state.properties.size():
-				if property == "State properties/%s" % [graph.selected_state.properties[i].name]:
-					return graph.selected_state.properties[i].value
+			for cached_item in graph.selected_state.property_cache:
+				if property == "State properties/%s" % [cached_item.name]:
+					return graph.selected_state.properties[cached_item.name]
 	
 func _get_property_list():
 	var property_list = []
@@ -55,18 +55,14 @@ func _get_property_list():
 	if graph.selected_state == null:
 		return property_list
 		
-	for i in graph.selected_state.properties.size():
-		var property = {}
-		
-		for key in graph.selected_state.properties[i].keys():
-			if key == "name":
-				property.name = "State properties/%s" % [graph.selected_state.properties[i].name]
-				continue
-				
-			if key == "usage":
-				property.usage = PROPERTY_USAGE_EDITOR
-				
-			property[key] = graph.selected_state.properties[i][key]
+	for cached_item in graph.selected_state.property_cache:
+		var property = {
+			"name" : "State properties/%s" % [cached_item.name],
+			"type" : cached_item.type,
+			"hint" : cached_item.hint,
+			"hint_string" : cached_item.hint_string,
+			"usage" : PROPERTY_USAGE_EDITOR
+		}
 		
 		property_list.push_back(property)
 	

@@ -347,8 +347,7 @@ func duplicate_state(p_position : Vector2, p_state_node : GraphEditorStateNode):
 		new_state.state_script = p_state_node.state.state_script
 
 	# Duplicate properties
-	for property in p_state_node.state.properties:
-		new_state.properties.push_back(property.duplicate())
+	new_state.properties = p_state_node.state.properties.duplicate()
 
 	if graph_editor.add_state_node(new_state) != OK:
 		print("duplicate_state :: Failed to add state node")
