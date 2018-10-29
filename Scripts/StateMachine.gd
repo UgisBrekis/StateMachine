@@ -139,8 +139,8 @@ func instantiate_next_state(p_index, p_args = []):
 	# Apply properties
 	_active_state.owner = get_parent()
 		
-	for property in graph.states[_active_state_id].properties:
-		_active_state.set(property.name, property.value)
+	for key in graph.states[_active_state_id].properties.keys():
+		_active_state.set(key, graph.states[_active_state_id].properties[key])
 		
 	_active_state.connect("transition_requested", self, "on_transition_requested")
 	
