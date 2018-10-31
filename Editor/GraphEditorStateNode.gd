@@ -73,6 +73,23 @@ func update_outputs():
 	# Update cache
 	state.property_cache = instance_property_list
 	
+	# Remove redundant properties
+	var redundant_keys : PoolStringArray = PoolStringArray()
+	
+	for key in state.properties.keys():
+		var is_redundant : bool = true
+		
+		for cached_item in state.property_cache:
+			if key == cached_item.name:
+				is_redundant = false
+				break
+				
+		if is_redundant:
+			redundant_keys.push_back(key)
+			
+	for key in redundant_keys:
+		state.properties.erase(key)
+	
 	# Apply values?
 	for cached_item in state.property_cache:
 		if !state.properties.has(cached_item.name):
@@ -92,5 +109,5 @@ func update_outputs():
 	# Clean up
 	instance.queue_free()
 
-	property_list_changed_notify()
+	state.property_list_changed_notify()
 	emit_signal("outputs_updated")
