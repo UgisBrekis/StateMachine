@@ -2,6 +2,7 @@ tool
 extends "GraphEditorConnectionBase.gd"
 
 const GraphEditorNode = preload("GraphEditorNode.gd")
+const Rerouter = preload("GraphEditorRerouter.gd")
 
 var from_node : GraphEditorNode = null
 var to_node : GraphEditorNode = null
@@ -95,4 +96,20 @@ func update_to_position():
 	
 	self.to_position = to_node.get_input_slot_socket_position(to_slot_index)
 	
+func add_reroute_point(p_position : Vector2):
+	var index = 0
+	
+	for i in reroute_points.size():
+		if curve.get_closest_offset(p_position) < curve.get_closest_offset(reroute_points[i]):
+			break
+			
+		index = i + 1
+		
+	reroute_points.insert(index, p_position)
+	add_child(Rerouter.new())
+	
+	update_shape()
+	
+func remove_reroute_point(p_position : Vector2):
+	pass
 	

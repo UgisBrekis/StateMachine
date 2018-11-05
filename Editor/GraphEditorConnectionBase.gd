@@ -12,6 +12,8 @@ var curvature : float = 20 setget set_curvature
 var from_position : Vector2 = Vector2() setget set_from_position
 var to_position : Vector2 = Vector2() setget set_to_position
 
+var reroute_points : PoolVector2Array = PoolVector2Array()
+
 func _init():
 	create_texture()
 	texture_mode = LineTextureMode
@@ -63,8 +65,12 @@ func update_shape():
 	var handle_length = min(from_position.distance_to(to_position) * 0.5, curvature)
 		
 	curve.add_point(from_position)
-	curve.add_point(from_position + Vector2(20, 0), Vector2(), Vector2(handle_length, 0))
-	curve.add_point(to_position + Vector2(-20, 0), Vector2(-handle_length, 0))
+	#curve.add_point(from_position + Vector2(20, 0), Vector2(), Vector2(handle_length, 0))
+	
+	for point in reroute_points:
+		curve.add_point(point)
+	
+	#curve.add_point(to_position + Vector2(-20, 0), Vector2(-handle_length, 0))
 	curve.add_point(to_position)
 	
 	points = curve.get_baked_points()

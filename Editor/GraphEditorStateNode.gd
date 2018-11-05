@@ -93,6 +93,7 @@ func update_property_cache():
 			
 	# Update cache
 	state.property_cache = instance_property_list
+	print("Cache: %s" % [state.property_cache])
 	
 	# Remove redundant properties
 	var redundant_keys : PoolStringArray = PoolStringArray()

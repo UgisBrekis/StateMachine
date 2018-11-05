@@ -31,7 +31,7 @@ func initialize_view():
 	nodes_layer = NodesLayer.new()
 	overlay_layer = OverlayLayer.new(theme)
 	
-	connections_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	connections_layer.mouse_filter = Control.MOUSE_FILTER_PASS
 	nodes_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	

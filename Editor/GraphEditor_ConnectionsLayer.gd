@@ -7,7 +7,10 @@ const Connection = preload("GraphEditorConnection.gd")
 var connection_width : float = 1
 var connection_curvature : float = 20
 
-var selected_connections = []
+var reroute = {
+	"connection" : null,
+	"position" : null
+}
 
 # Signals
 signal connection_added(p_from, p_from_index, p_to, p_to_index)
@@ -22,20 +25,45 @@ func _init(p_theme : Theme):
 	connection_width = theme.get_constant("graph_editor_connection_width", "Editor")
 	connection_curvature = theme.get_constant("graph_editor_connection_curvature", "Editor")
 	
-func _input(event):
-	if event is InputEventMouseMotion:
-		selected_connections.clear()
-		
-		for child in get_children():
-			var connection = child as Connection
+func _gui_input(event):
+	if event is InputEventMouseButton:
+		print("y")
+		if event.button_index != BUTTON_LEFT:
+			return
 			
-			if connection == null:
-				return
+		if !event.pressed:
+			return
 			
-			if connection.curve.get_closest_point(get_local_mouse_position()).distance_to(get_local_mouse_position()) < 20:
-				selected_connections.push_back(connection)
+		if Input.is_key_pressed(KEY_META):
+			print("dooo")
+			reroute.connection = null
+			reroute.position = null
+			
+			for child in get_children():
+				var connection = child as Connection
 				
-		update()
+				if connection == null:
+					continue
+				
+				var point = connection.curve.get_closest_point(get_local_mouse_position())
+				
+				if point.distance_to(get_local_mouse_position()) > 40:
+					continue
+					
+				if reroute.position == null:
+					reroute.connection = connection
+					reroute.position = point
+					
+					continue
+					
+				if point.distance_to(get_local_mouse_position()) < reroute.position.distance_to(get_local_mouse_position()):
+					reroute.connection = connection
+					reroute.position = point
+			
+			if reroute.connection != null:
+				var connection  = reroute.connection as Connection
+				
+				connection.add_reroute_point(reroute.position)
 
 func on_reconnect_requested(p_connection : Connection, p_from_index : int, p_to_index : int):
 	emit_signal("reconnect_requested", p_connection, p_from_index, p_to_index)
@@ -117,12 +145,6 @@ func get_outgoing_connections(p_node : GraphEditorNode, p_slot_index : int):
 			connections.push_back(connection)
 			
 	return connections
-	
-func _draw():
-	for connection in selected_connections:
-		var p = connection.curve.get_closest_point(get_local_mouse_position())
-		
-		draw_circle(p, 20, Color(1, 1, 0, 0.5))
 	
 	
 	
