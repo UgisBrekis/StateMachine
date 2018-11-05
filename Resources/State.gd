@@ -1,8 +1,9 @@
 tool
 extends Resource
 
-export(String) var name = "New state" setget set_state_name
+export(String) var label = "New state" setget set_state_label
 export(GDScript) var state_script = null setget set_state_script
+export(PoolStringArray) var outputs = PoolStringArray() setget set_outputs
 
 var offset = Vector2()
 var properties = {}
@@ -12,6 +13,7 @@ var property_cache = []
 # Signals
 signal renamed
 signal state_script_changed
+signal outputs_changed
 
 func _get(property):
 	match property:
@@ -48,8 +50,8 @@ func _get_property_list():
 	
 	return property_list
 
-func set_state_name(p_name):
-	name = p_name
+func set_state_label(p_label):
+	label = p_label
 	
 	emit_signal("renamed")
 
@@ -57,4 +59,9 @@ func set_state_script(p_script):
 	state_script = p_script
 	
 	emit_signal("state_script_changed")
+	
+func set_outputs(p_outputs : PoolStringArray):
+	outputs = p_outputs
+	
+	emit_signal("outputs_changed")
 	

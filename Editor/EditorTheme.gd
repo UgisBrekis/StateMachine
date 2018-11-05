@@ -88,3 +88,4 @@ static func create_editor_theme(p_theme : Theme):
 	# Connection
 	var connection_width = 4.0 * scale
 	p_theme.set_constant("graph_editor_connection_width", "Editor", 4 * scale)
+	p_theme.set_constant("graph_editor_connection_curvature", "Editor", 100 * scale)

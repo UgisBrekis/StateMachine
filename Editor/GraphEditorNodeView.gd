@@ -5,6 +5,7 @@ var content_container : VBoxContainer = null
 
 var header_panel : PanelContainer = null
 var title_label : Label = null
+var warning_button : Button = null
 
 var inputs_container : VBoxContainer = null
 var outputs_container : VBoxContainer = null
@@ -23,11 +24,23 @@ func initialize_view():
 	
 	header_panel.add_stylebox_override("panel", theme.get_stylebox("state_node_header", "Editor"))
 	
+	var header_hbox = HBoxContainer.new()
+	
 	# Title label
 	title_label = Label.new()
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	header_panel.add_child(title_label)
+	# Warning icon
+	warning_button = Button.new()
+	warning_button.flat = true
+	warning_button.add_stylebox_override("focus", StyleBoxEmpty.new())
+	warning_button.icon = theme.get_icon("NodeWarning", "EditorIcons")
+	
+	header_hbox.add_child(title_label)
+	header_hbox.add_child(warning_button)
+	
+	header_panel.add_child(header_hbox)
 	
 	content_container.add_child(header_panel)
 	

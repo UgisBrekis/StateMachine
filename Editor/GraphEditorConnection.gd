@@ -16,9 +16,10 @@ var to_slot_text : String
 signal reconnect_requested(p_transition, p_from_slot_index, p_to_slot_index)
 signal remove_requested(p_transition)
 
-func initialize(p_width : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int):
+func initialize(p_width : float, p_curvature : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int):
 	create_texture()
 	width = p_width
+	curvature = p_curvature
 	
 	from_node = p_from
 	to_node = p_to

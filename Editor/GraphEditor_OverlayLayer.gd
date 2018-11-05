@@ -29,6 +29,7 @@ func _enter_tree():
 	selection_box = SelectionBox.new()
 	
 	connection.width = theme.get_constant("graph_editor_connection_width", "Editor")
+	connection.curvature = theme.get_constant("graph_editor_connection_curvature", "Editor")
 	snap_distance = theme.get_constant("graph_editor_socket_snap_distance", "Editor")
 	
 	add_child(connection)

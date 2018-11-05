@@ -7,7 +7,7 @@ const LineColor = Color.whitesmoke
 var curve : Curve2D = null
 
 # Properties
-var curvature : float = 0.5 setget set_curvature
+var curvature : float = 20 setget set_curvature
 
 var from_position : Vector2 = Vector2() setget set_from_position
 var to_position : Vector2 = Vector2() setget set_to_position
@@ -57,12 +57,14 @@ func set_to_position(p_position : Vector2):
 func update_shape():
 	if curve == null:
 		return
-		
+	
 	curve.clear_points()
 	
-	var handle_length = from_position.distance_to(to_position) * curvature
+	var handle_length = min(from_position.distance_to(to_position) * 0.5, curvature)
 		
-	curve.add_point(from_position, Vector2(), Vector2(handle_length, 0))
-	curve.add_point(to_position, Vector2(-handle_length, 0))
+	curve.add_point(from_position)
+	curve.add_point(from_position + Vector2(20, 0), Vector2(), Vector2(handle_length, 0))
+	curve.add_point(to_position + Vector2(-20, 0), Vector2(-handle_length, 0))
+	curve.add_point(to_position)
 	
 	points = curve.get_baked_points()

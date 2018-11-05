@@ -87,7 +87,7 @@ func apply_changes():
 
 	if active_state_machine.graph == null:
 		return
-
+		
 	if graph_editor == null:
 		return
 
@@ -319,7 +319,7 @@ func create_new_state(p_position : Vector2, p_state_script : GDScript):
 		# Filename as state name
 		var extension = p_state_script.resource_path.get_extension()
 		var file_name = p_state_script.resource_path.get_file()
-		new_state.name = file_name.rstrip(".%s" % [extension])
+		new_state.label = file_name.rstrip(".%s" % [extension])
 
 	if graph_editor.add_state_node(new_state) != OK:
 		print("create_new_empty_state :: Failed to add state node")
@@ -345,6 +345,9 @@ func duplicate_state(p_position : Vector2, p_state_node : GraphEditorStateNode):
 	# Assign the same state script
 	if p_state_node.state.state_script != null:
 		new_state.state_script = p_state_node.state.state_script
+		
+	# Duplicate outputs
+	new_state.outputs = p_state_node.state.outputs
 
 	# Duplicate properties
 	new_state.properties = p_state_node.state.properties.duplicate()
