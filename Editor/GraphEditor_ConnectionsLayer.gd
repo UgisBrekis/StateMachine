@@ -6,6 +6,7 @@ const Connection = preload("GraphEditorConnection.gd")
 
 var connection_width : float = 1
 var connection_curvature : float = 20
+var display_scale : float = 1.0
 
 var reroute = {
 	"connection" : null,
@@ -17,17 +18,18 @@ signal connection_added(p_from, p_from_index, p_to, p_to_index)
 signal connection_removed
 
 signal cleared
+signal reroute_points_changed(p_connection)
 signal reconnect_requested(p_connection, p_from_index, p_to_index)
 signal remove_requested(p_connection)
 
 func _init(p_theme : Theme):
 	theme = p_theme
+	display_scale = theme.get_constant("scale", "Editor")
 	connection_width = theme.get_constant("graph_editor_connection_width", "Editor")
 	connection_curvature = theme.get_constant("graph_editor_connection_curvature", "Editor")
 	
 func _gui_input(event):
 	if event is InputEventMouseButton:
-		print("y")
 		if event.button_index != BUTTON_LEFT:
 			return
 			
@@ -35,7 +37,6 @@ func _gui_input(event):
 			return
 			
 		if Input.is_key_pressed(KEY_META):
-			print("dooo")
 			reroute.connection = null
 			reroute.position = null
 			
@@ -64,21 +65,27 @@ func _gui_input(event):
 				var connection  = reroute.connection as Connection
 				
 				connection.add_reroute_point(reroute.position)
+				
+				on_reroute_points_changed(connection)
 
 func on_reconnect_requested(p_connection : Connection, p_from_index : int, p_to_index : int):
 	emit_signal("reconnect_requested", p_connection, p_from_index, p_to_index)
 	
 func on_remove_requested(p_connection : Connection):
 	emit_signal("remove_requested", p_connection)
+	
+func on_reroute_points_changed(p_connection : Connection):
+	emit_signal("reroute_points_changed", p_connection)
 
-func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int):
+func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int, p_reroute_points : PoolVector2Array):
 	var connection : Connection = Connection.new()
 	add_child(connection)
 	
-	connection.initialize(connection_width, connection_curvature, p_from, p_from_index, p_to, p_to_index)
+	connection.initialize(connection_width, display_scale, connection_curvature, p_from, p_from_index, p_to, p_to_index, p_reroute_points)
 	
 	connection.connect("reconnect_requested", self, "on_reconnect_requested")
 	connection.connect("remove_requested", self, "on_remove_requested")
+	connection.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	return OK
 	

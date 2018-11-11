@@ -37,6 +37,7 @@ signal create_connection_request(p_from, p_from_index, p_to, p_to_index)
 signal duplicate_state_request(p_position, p_state_node)
 signal remove_connection_request(p_from, p_from_index, p_to, p_to_index)
 signal reconnect_connection_request(p_connection, p_from_index, p_to_index)
+signal reroute_points_changed(p_connection)
 
 func _init(p_theme : Theme):
 	theme = p_theme
@@ -59,6 +60,9 @@ func _enter_tree():
 		
 	if !connections_layer.is_connected("remove_requested", self, "on_connection_remove_requested"):
 		connections_layer.connect("remove_requested", self, "on_connection_remove_requested")
+		
+	if !connections_layer.is_connected("reroute_points_changed", self, "on_reroute_points_changed"):
+		connections_layer.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	# Overlay Layer
 	if !overlay_layer.is_connected("connection_drag_completed", self, "on_overlay_layer_connection_drag_completed"):
@@ -104,6 +108,9 @@ func on_connection_reconnect_requested(p_connection, p_from_index : int, p_to_in
 	
 func on_connection_remove_requested(p_connection):
 	emit_signal("remove_connection_request", p_connection.from_node, p_connection.from_slot_index, p_connection.to_node, p_connection.to_slot_index)
+	
+func on_reroute_points_changed(p_connection):
+	emit_signal("reroute_points_changed", p_connection)
 	
 func on_node_socket_drag_started(p_node : GraphEditorNode, p_input : bool, p_slot_index : int):
 	var slot_type = p_node.get_slot_type(p_input, p_slot_index)
@@ -428,7 +435,7 @@ func populate_graph(p_graph : StateMachineGraph):
 		if from_node == null || to_node == null:
 			return
 		
-		connect_graph_nodes(from_node, transition.from_slot_index, to_node, transition.to_slot_index)
+		connect_graph_nodes(from_node, transition.from_slot_index, to_node, transition.to_slot_index, transition.reroute_points)
 	
 func clear_graph():
 	clear_selection()
@@ -504,8 +511,8 @@ func remove_all_connections_from_node(p_node : GraphEditorNode):
 	
 	return err
 	
-func connect_graph_nodes(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int):
-	if connections_layer.add_new_connection(p_from, p_from_index, p_to, p_to_index) != OK:
+func connect_graph_nodes(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int, p_reroute_points : PoolVector2Array = PoolVector2Array()):
+	if connections_layer.add_new_connection(p_from, p_from_index, p_to, p_to_index, p_reroute_points) != OK:
 		return ERR_BUG
 		
 	return OK

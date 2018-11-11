@@ -2,7 +2,6 @@ tool
 extends "GraphEditorConnectionBase.gd"
 
 const GraphEditorNode = preload("GraphEditorNode.gd")
-const Rerouter = preload("GraphEditorRerouter.gd")
 
 var from_node : GraphEditorNode = null
 var to_node : GraphEditorNode = null
@@ -17,9 +16,10 @@ var to_slot_text : String
 signal reconnect_requested(p_transition, p_from_slot_index, p_to_slot_index)
 signal remove_requested(p_transition)
 
-func initialize(p_width : float, p_curvature : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int):
+func initialize(p_width : float, p_display_scale : float, p_curvature : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int, p_reroute_points : PoolVector2Array):
 	create_texture()
 	width = p_width
+	display_scale = p_display_scale
 	curvature = p_curvature
 	
 	from_node = p_from
@@ -30,6 +30,15 @@ func initialize(p_width : float, p_curvature : float, p_from : GraphEditorNode, 
 	
 	from_slot_text = from_node.get_output_slot(from_slot_index).text
 	to_slot_text = to_node.get_input_slot(to_slot_index).text
+	
+	reroute_points = p_reroute_points
+	
+	for i in reroute_points.size():
+		var rerouter = Rerouter.new(width, display_scale,  reroute_points[i])
+		add_child(rerouter)
+		
+		rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")
+		rerouter.connect("remove_requested", self, "on_rerouter_remove_requested")
 	
 	call_deferred("update_positions")
 	
@@ -95,21 +104,4 @@ func update_to_position():
 		return
 	
 	self.to_position = to_node.get_input_slot_socket_position(to_slot_index)
-	
-func add_reroute_point(p_position : Vector2):
-	var index = 0
-	
-	for i in reroute_points.size():
-		if curve.get_closest_offset(p_position) < curve.get_closest_offset(reroute_points[i]):
-			break
-			
-		index = i + 1
-		
-	reroute_points.insert(index, p_position)
-	add_child(Rerouter.new())
-	
-	update_shape()
-	
-func remove_reroute_point(p_position : Vector2):
-	pass
 	

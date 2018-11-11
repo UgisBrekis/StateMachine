@@ -52,6 +52,7 @@ func connect_signals():
 	graph_editor.connect("create_connection_request", self, "on_create_connection_request")
 	graph_editor.connect("remove_connection_request", self, "on_remove_connection_request")
 	graph_editor.connect("reconnect_connection_request", self, "on_reconnect_connection_request")
+	graph_editor.connect("reroute_points_changed", self, "on_reroute_points_changed")
 
 func disconnect_signals():
 	editor_selection.disconnect("selection_changed", self, "on_editor_interface_selection_changed")
@@ -241,6 +242,9 @@ func on_remove_connection_request(p_from : GraphEditorNode, p_from_index : int, 
 
 func on_reconnect_connection_request(p_connection, p_from_index : int, p_to_index : int):
 	reconnect_transition(p_connection, p_from_index, p_to_index)
+
+func on_reroute_points_changed(p_connection):
+	update_reroute_points(p_connection)
 
 func create_new_state_machine_graph():
 	if active_state_machine == null:
@@ -575,5 +579,39 @@ func reconnect_transition(p_connection, p_from_index : int, p_to_index : int):
 	graph_editor.reconnect_graph_nodes(p_connection, p_from_index, p_to_index)
 
 	print("reconnect_transition :: Transition reconnected")
+	
+func update_reroute_points(p_connection):
+	var from_node : GraphEditorNode = p_connection.from_node
+	var to_node : GraphEditorNode = p_connection.to_node
+	var from_slot_index : int = p_connection.from_slot_index
+	var to_slot_index : int = p_connection.to_slot_index
+
+	# If state node if being disconnected from another state node
+	if !(from_node is GraphEditorStateNode) || !(to_node is GraphEditorStateNode):
+		return
+
+	var from_state_index : int = -1
+	var to_state_index : int = -1
+
+	for i in active_state_machine.graph.states.size():
+		if from_node.state == active_state_machine.graph.states[i]:
+			from_state_index = i
+			continue
+
+		if to_node.state == active_state_machine.graph.states[i]:
+			to_state_index = i
+
+		if from_state_index != -1 && to_state_index != -1:
+			break
+
+	if from_state_index == -1 || to_state_index == -1:
+		return
+
+	var transition = active_state_machine.graph.get_transition(from_state_index, from_slot_index, to_state_index, to_slot_index)
+
+	if transition == null:
+		return
+		
+	active_state_machine.graph.update_reroute_points(transition, p_connection.reroute_points)
 
 

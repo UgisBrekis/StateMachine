@@ -147,3 +147,8 @@ func get_incomming_connections(p_to_state_index : int, p_to_slot_index : int):
 			connections.push_back(transition)
 			
 	return connections
+	
+func update_reroute_points(p_transition : Transition, p_reroute_points : Array):
+	p_transition.reroute_points = p_reroute_points
+	
+	print("Reroute points updated")
