@@ -36,7 +36,12 @@ func _gui_input(event):
 		if !event.pressed:
 			return
 			
-		if Input.is_key_pressed(KEY_META):
+		var key = KEY_CONTROL
+		
+		if OS.get_name() == "OSX":
+			key = KEY_META
+			
+		if Input.is_key_pressed(key):
 			reroute.connection = null
 			reroute.position = null
 			
