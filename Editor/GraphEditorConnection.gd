@@ -34,7 +34,7 @@ func initialize(p_width : float, p_display_scale : float, p_curvature : float, p
 	reroute_points = p_reroute_points
 	
 	for i in reroute_points.size():
-		var rerouter = Rerouter.new(width, display_scale,  reroute_points[i])
+		var rerouter = Rerouter.new(p_width, reroute_texture, p_display_scale, reroute_points[i])
 		add_child(rerouter)
 		
 		rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")

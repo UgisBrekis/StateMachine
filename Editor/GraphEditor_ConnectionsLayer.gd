@@ -79,6 +79,9 @@ func on_reroute_points_changed(p_connection : Connection):
 
 func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int, p_reroute_points : PoolVector2Array):
 	var connection : Connection = Connection.new()
+	
+	connection.reroute_texture = theme.get_icon("port", "GraphNode")
+	
 	add_child(connection)
 	
 	connection.initialize(connection_width, display_scale, connection_curvature, p_from, p_from_index, p_to, p_to_index, p_reroute_points)

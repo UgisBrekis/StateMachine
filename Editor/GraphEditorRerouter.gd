@@ -7,10 +7,14 @@ var display_scale : float = 1.0
 signal offset_changed(p_id, p_offset)
 signal remove_requested(p_id)
 
-func _init(p_width : float, p_display_scale : float, p_offset : Vector2):
+func _init(p_width : float, p_icon : Texture, p_scale : float, p_offset : Vector2):
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	rect_size = Vector2(p_width, p_width) * 2
-	display_scale = p_display_scale
+	stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	expand = true
+	
+	rect_size = Vector2(2, 2) * p_width
+	texture = p_icon
+	display_scale = p_scale
 	
 	self.offset = p_offset
 

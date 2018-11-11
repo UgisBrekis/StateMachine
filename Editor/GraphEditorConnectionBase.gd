@@ -9,6 +9,7 @@ const LineColor = Color.whitesmoke
 var curve : Curve2D = null
 
 # Properties
+var reroute_texture : Texture = null
 var curvature : float = 20 setget set_curvature
 var display_scale : float = 1.0
 
@@ -113,7 +114,7 @@ func add_reroute_point(p_position : Vector2):
 		
 	reroute_points.insert(index, p_position / display_scale)
 		
-	var rerouter = Rerouter.new(width, display_scale,  reroute_points[index])
+	var rerouter = Rerouter.new(width, reroute_texture, display_scale, reroute_points[index])
 	add_child(rerouter)
 	move_child(rerouter, index)
 	
