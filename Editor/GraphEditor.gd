@@ -88,6 +88,9 @@ func set_snapping_enabled(p_snapping_enabled : bool):
 	
 	for node in nodes_layer.get_children():
 		node.snap_distance = snap_distance
+		
+	for connection in connections_layer.get_children():
+		connection.snap_distance = snap_distance
 
 func on_scroll_container_gui_input(event : InputEvent):
 	if event is InputEventMouseButton:

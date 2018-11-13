@@ -46,6 +46,11 @@ static func create_editor_theme(p_theme : Theme):
 	sb.border_width_right = 1 * scale
 	sb.border_width_bottom = 1 * scale
 	
+	sb.corner_radius_bottom_left = 2 * scale
+	sb.corner_radius_bottom_right = 2 * scale
+	sb.corner_radius_top_left = 2 * scale
+	sb.corner_radius_top_right = 2 * scale
+	
 	p_theme.set_stylebox("state_node", "Editor", sb)
 	
 	# Header
@@ -56,6 +61,9 @@ static func create_editor_theme(p_theme : Theme):
 	sb.content_margin_left = 4 * scale
 	sb.content_margin_right = 4 * scale
 	sb.content_margin_top = 2 * scale
+	
+	sb.corner_radius_top_left = 2 * scale
+	sb.corner_radius_top_right = 2 * scale
 	
 	p_theme.set_stylebox("state_node_header", "Editor", sb)
 	
@@ -82,6 +90,11 @@ static func create_editor_theme(p_theme : Theme):
 	sb.expand_margin_left = 2 * scale
 	sb.expand_margin_right = 2 * scale
 	sb.expand_margin_top = 2 * scale
+	
+	sb.corner_radius_bottom_left = 4 * scale
+	sb.corner_radius_bottom_right = 4 * scale
+	sb.corner_radius_top_left = 4 * scale
+	sb.corner_radius_top_right = 4 * scale
 	
 	p_theme.set_stylebox("state_node_focus", "Editor", sb)
 	

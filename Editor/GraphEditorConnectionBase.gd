@@ -9,9 +9,12 @@ const LineColor = Color.whitesmoke
 var curve : Curve2D = null
 
 # Properties
-var reroute_texture : Texture = null
+var reroute_default_texture : Texture = null
+var reroute_highlight_texture : Texture = null
+
 var curvature : float = 20 setget set_curvature
 var display_scale : float = 1.0
+var snap_distance : int = -1 setget set_snap_distance
 
 var from_position : Vector2 = Vector2() setget set_from_position
 var to_position : Vector2 = Vector2() setget set_to_position
@@ -51,6 +54,12 @@ func set_curvature(p_curvature : float):
 	curvature = p_curvature
 	
 	update_shape()
+	
+func set_snap_distance(p_snap_distance : int):
+	snap_distance = p_snap_distance
+	
+	for rerouter in get_children():
+		rerouter.snap_distance = snap_distance
 	
 func set_from_position(p_position : Vector2):
 	from_position = p_position
@@ -97,6 +106,7 @@ func update_shape():
 			next = curve.get_point_position(i + 1)
 			
 			var handle : Vector2 = (next - previous).normalized()
+			handle.y = 0
 			
 			curve.set_point_in(i, -handle * min(current.distance_to(previous) * 0.5, curvature))
 			curve.set_point_out(i, handle * min(current.distance_to(next) * 0.5, curvature))
@@ -114,13 +124,13 @@ func add_reroute_point(p_position : Vector2):
 		
 	reroute_points.insert(index, p_position / display_scale)
 		
-	var rerouter = Rerouter.new(width, reroute_texture, display_scale, reroute_points[index])
+	var rerouter = Rerouter.new(width, reroute_default_texture, reroute_highlight_texture, display_scale, reroute_points[index])
 	add_child(rerouter)
 	move_child(rerouter, index)
 	
 	rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")
 	rerouter.connect("remove_requested", self, "on_rerouter_remove_requested")
-	print("rp: %s" % [display_scale])
+	
 	update_shape()
 	
 func remove_reroute_point(p_index : int):
@@ -133,8 +143,10 @@ func remove_reroute_point(p_index : int):
 	
 	emit_signal("reroute_points_changed", self)
 	
-func on_rerouter_offset_changed(p_id, p_offset):
-	reroute_points[p_id] = p_offset
+func on_rerouter_offset_changed(p_id : int, p_offset : Vector2):
+	var rerouter = get_child(p_id) as Rerouter
+	
+	reroute_points[p_id] = (rerouter.rect_position + rerouter.rect_size / 2) / display_scale
 	
 	emit_signal("reroute_points_changed", self)
 	
