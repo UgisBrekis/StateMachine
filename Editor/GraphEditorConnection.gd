@@ -16,9 +16,11 @@ var to_slot_text : String
 signal reconnect_requested(p_transition, p_from_slot_index, p_to_slot_index)
 signal remove_requested(p_transition)
 
-func initialize(p_width : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int):
+func initialize(p_width : float, p_display_scale : float, p_curvature : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int, p_reroute_points : PoolVector2Array):
 	create_texture()
 	width = p_width
+	display_scale = p_display_scale
+	curvature = p_curvature
 	
 	from_node = p_from
 	to_node = p_to
@@ -28,6 +30,15 @@ func initialize(p_width : float, p_from : GraphEditorNode, p_from_slot : int, p_
 	
 	from_slot_text = from_node.get_output_slot(from_slot_index).text
 	to_slot_text = to_node.get_input_slot(to_slot_index).text
+	
+	reroute_points = p_reroute_points
+	
+	for i in reroute_points.size():
+		var rerouter = Rerouter.new(p_width, reroute_default_texture, reroute_highlight_texture, p_display_scale, reroute_points[i])
+		add_child(rerouter)
+		
+		rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")
+		rerouter.connect("remove_requested", self, "on_rerouter_remove_requested")
 	
 	call_deferred("update_positions")
 	
@@ -93,5 +104,4 @@ func update_to_position():
 		return
 	
 	self.to_position = to_node.get_input_slot_socket_position(to_slot_index)
-	
 	

@@ -33,7 +33,7 @@ func apply_changes():
 			
 		var node = child as GraphEditorStateNode
 		
-		node.update_outputs()
+		node.update_property_cache()
 		
 
 

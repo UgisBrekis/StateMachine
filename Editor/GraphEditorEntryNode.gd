@@ -17,6 +17,8 @@ func initialize(p_graph : StateMachineGraph):
 	self.offset = graph.entry_node_offset
 	self.title = "Entry"
 	
+	warning_button.hide()
+	
 	# Create output slot
 	add_output_slot(0, Color.yellowgreen, "OnStart")
 	

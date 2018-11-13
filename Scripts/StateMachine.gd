@@ -112,7 +112,6 @@ func on_transition_requested(p_index, p_args = []):
 			
 		# Transition found, try to instantiate next state
 		instantiate_next_state(transition.to_state_index, p_args)
-		
 		return
 		
 	# Transition does not exist

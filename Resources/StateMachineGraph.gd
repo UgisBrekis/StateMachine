@@ -2,13 +2,14 @@ tool
 extends Resource
 
 const State = preload("State.gd")
+const Transition = preload("Transition.gd")
 
 export(Vector2) var entry_node_offset = Vector2()
 
 export(int) var start_state_id = -1
 
-export var states = []
-export var transitions = []
+export(Array) var states = []
+export(Array) var transitions = []
 
 var selected_state : State = null
 
@@ -79,12 +80,12 @@ func add_transition(p_from_state_index : int, p_from_slot_index : int, p_to_stat
 	if get_transition(p_from_state_index, p_from_slot_index, p_to_state_index, p_to_slot_index) != null:
 		return ERR_ALREADY_EXISTS
 		
-	var transition = {
-		"from_state_index" : p_from_state_index,
-		"from_slot_index" : p_from_slot_index,
-		"to_state_index" : p_to_state_index,
-		"to_slot_index" : p_to_slot_index
-	}
+	var transition : Transition = Transition.new()
+	
+	transition.from_state_index = p_from_state_index
+	transition.from_slot_index = p_from_slot_index
+	transition.to_state_index = p_to_state_index
+	transition.to_slot_index = p_to_slot_index
 	
 	transitions.push_back(transition)
 	property_list_changed_notify()
@@ -146,3 +147,8 @@ func get_incomming_connections(p_to_state_index : int, p_to_slot_index : int):
 			connections.push_back(transition)
 			
 	return connections
+	
+func update_reroute_points(p_transition : Transition, p_reroute_points : Array):
+	p_transition.reroute_points = p_reroute_points
+	
+	print("Reroute points updated")
