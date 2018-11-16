@@ -1,7 +1,7 @@
 tool
 extends Control
 
-const GraphEditor = preload("GraphEditor.gd")
+const GraphEditor = preload("../GraphEditor.gd")
 
 enum PopupMenuItems {
 	CREATE_NEW,

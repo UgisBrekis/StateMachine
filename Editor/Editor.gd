@@ -1,5 +1,5 @@
 tool
-extends "EditorView.gd"
+extends "Views/EditorView.gd"
 
 const EditorTheme = preload("EditorTheme.gd")
 

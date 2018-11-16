@@ -1,5 +1,5 @@
 tool
-extends "GraphEditorNodeSlotView.gd"
+extends "Views/GraphEditorNodeSlotView.gd"
 
 # Properties
 var is_input : bool = true setget set_is_input

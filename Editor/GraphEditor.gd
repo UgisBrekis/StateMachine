@@ -1,5 +1,5 @@
 tool
-extends "GraphEditorView.gd"
+extends "Views/GraphEditorView.gd"
 
 enum PopupMenuIDs {
 	CREATE_NEW_STATE,
@@ -48,12 +48,12 @@ func _init(p_theme : Theme):
 
 func _enter_tree():
 	# Scroll Container
-	if !scroll_container.is_connected("gui_input", self, "on_scroll_container_gui_input"):
-		scroll_container.connect("gui_input", self, "on_scroll_container_gui_input")
-		
-	if !scroll_container.is_connected("state_scripts_dropped", self, "on_state_scripts_dropped"):
-		scroll_container.connect("state_scripts_dropped", self, "on_state_scripts_dropped")
-		
+	scroll_container.connect("left_click_down", self, "on_scroll_container_left_click_down")
+	scroll_container.connect("right_click_down", self, "on_scroll_container_right_click_down")
+	scroll_container.connect("state_scripts_dropped", self, "on_state_scripts_dropped")
+	
+	
+	
 	# Connections layer
 	if !connections_layer.is_connected("reconnect_requested", self, "on_connection_reconnect_requested"):
 		connections_layer.connect("reconnect_requested", self, "on_connection_reconnect_requested")
@@ -92,20 +92,16 @@ func set_snapping_enabled(p_snapping_enabled : bool):
 	for connection in connections_layer.get_children():
 		connection.snap_distance = snap_distance
 
-func on_scroll_container_gui_input(event : InputEvent):
-	if event is InputEventMouseButton:
-		if event.pressed:
-			match event.button_index:
-				BUTTON_LEFT:
-					if !Input.is_key_pressed(KEY_SHIFT) && !Input.is_key_pressed(KEY_META):
-						# Deselect everything
-						clear_selection()
-					
-					overlay_layer.begin_selection_box_drag(overlay_layer.get_local_mouse_position())
-				
-				BUTTON_RIGHT:
-					show_popup_menu(event.global_position, null)
+func on_scroll_container_left_click_down():
+	if !Input.is_key_pressed(KEY_SHIFT) && !Input.is_key_pressed(KEY_META):
+		# Deselect everything
+		clear_selection()
+		
+	overlay_layer.begin_selection_box_drag(overlay_layer.get_local_mouse_position())
 	
+func on_scroll_container_right_click_down():
+	show_popup_menu(get_global_mouse_position(), null)
+
 func on_connection_reconnect_requested(p_connection, p_from_index : int, p_to_index : int):
 	emit_signal("reconnect_connection_request", p_connection, p_from_index, p_to_index)
 	

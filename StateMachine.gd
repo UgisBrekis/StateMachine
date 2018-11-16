@@ -2,7 +2,7 @@ tool
 extends Node
 class_name StateMachine
 
-const StateMachineGraph = preload("../Resources/StateMachineGraph.gd")
+const StateMachineGraph = preload("Resources/StateMachineGraph.gd")
 
 export(bool) var autostart = true
 
@@ -26,7 +26,7 @@ func _set(property, value):
 	if graph != null:
 		if graph.selected_state != null:
 			for cached_item in graph.selected_state.property_cache:
-				if property == "State properties/%s" % [cached_item.name]:
+				if property == "Selected state/%s" % [cached_item.name]:
 					graph.selected_state.properties[cached_item.name] = value
 					return true
 	
@@ -37,7 +37,7 @@ func _get(property):
 	if graph != null:
 		if graph.selected_state != null:
 			for cached_item in graph.selected_state.property_cache:
-				if property == "State properties/%s" % [cached_item.name]:
+				if property == "Selected state/%s" % [cached_item.name]:
 					return graph.selected_state.properties[cached_item.name]
 	
 func _get_property_list():
@@ -57,7 +57,7 @@ func _get_property_list():
 		
 	for cached_item in graph.selected_state.property_cache:
 		var property = {
-			"name" : "State properties/%s" % [cached_item.name],
+			"name" : "Selected state/%s" % [cached_item.name],
 			"type" : cached_item.type,
 			"hint" : cached_item.hint,
 			"hint_string" : cached_item.hint_string,
