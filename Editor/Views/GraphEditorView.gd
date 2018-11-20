@@ -28,7 +28,7 @@ func initialize_view():
 	
 	# Layers
 	connections_layer = ConnectionsLayer.new(theme)
-	nodes_layer = NodesLayer.new()
+	nodes_layer = NodesLayer.new(theme)
 	overlay_layer = OverlayLayer.new(theme)
 	
 	connections_layer.mouse_filter = Control.MOUSE_FILTER_PASS

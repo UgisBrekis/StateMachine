@@ -116,10 +116,7 @@ func reassign_connection(p_connection : Connection, p_from_index : int, p_to_ind
 	
 func clear():
 	for child in get_children():
-		if !(child is Connection):
-			continue
-			
-		child.queue_free()
+		child.free()
 	
 func get_connection(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int):
 	for child in get_children():

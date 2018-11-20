@@ -49,11 +49,11 @@ func begin_connection_drag(p_is_input : bool, p_position : Vector2, p_snap_posit
 	connection.show()
 	selection_box.hide()
 	
-func begin_selection_box_drag(p_position : Vector2):
+func begin_selection_box_drag():
 	is_dragging = true
 	
-	selection_box.from_position = p_position
-	selection_box.to_position = p_position
+	selection_box.from_position = get_local_mouse_position()
+	selection_box.to_position = selection_box.from_position
 	
 	connection.hide()
 	selection_box.show()

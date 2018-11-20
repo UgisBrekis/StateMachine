@@ -11,18 +11,48 @@ export(int) var start_state_id = -1
 export(Array) var states = []
 export(Array) var transitions = []
 
-var selected_state : State = null
-
-func add_state(p_state : State):
-	if !(p_state is State):
-		return ERR_INVALID_PARAMETER
-		
-	if p_state in states:
-		return ERR_ALREADY_EXISTS
-		
-	states.push_back(p_state)
+func set_state_as_default(p_state : State):
+	if !states.has(p_state):
+		start_state_id = -1
+		return
 	
-	return OK
+	if p_state == null:
+		start_state_id = -1
+		return
+	
+	for i in states.size():
+		if p_state == states[i]:
+			start_state_id = i
+			break
+
+func add_state(p_position : Vector2, p_script : GDScript) -> State:
+	var new_state = State.new().duplicate() as State
+	
+	new_state.offset = p_position
+
+	if p_script != null:
+		new_state.state_script = p_script
+
+		# Filename as state name
+		var extension = p_script.resource_path.get_extension()
+		var file_name = p_script.resource_path.get_file()
+		new_state.label = file_name.rstrip(".%s" % [extension])
+		
+	states.push_back(new_state)
+	
+	return new_state
+	
+func duplicate_state(p_state : State, p_position : Vector2) -> State:
+	var new_state = State.new().duplicate() as State
+	
+	new_state.offset = p_position
+	new_state.state_script = p_state.state_script
+	new_state.outputs = p_state.outputs
+	new_state.properties = p_state.properties.duplicate()
+	
+	states.push_back(new_state)
+	
+	return new_state
 	
 func remove_state(p_state : State):
 	if !(p_state is State):
@@ -48,14 +78,6 @@ func remove_state(p_state : State):
 	if start_state_id > previous_index:
 		start_state_id = max(-1, start_state_id - 1)
 	
-	# Assign updated state indexes
-	for transition in transitions:
-		if transition.from_state_index > previous_index:
-			transition.from_state_index -= 1
-			
-		if transition.to_state_index > previous_index:
-			transition.to_state_index -= 1
-	
 	return OK
 	
 func get_state(p_index : int):
@@ -67,38 +89,31 @@ func get_state(p_index : int):
 		
 	return states[p_index]
 	
-func add_transition(p_from_state_index : int, p_from_slot_index : int, p_to_state_index : int, p_to_slot_index : int):
-	if p_from_state_index == p_to_state_index:
-		return ERR_INVALID_PARAMETER
+func add_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
+	if p_from_state == p_to_state:
+		return null
 		
-	if p_from_state_index < 0 || p_to_state_index < 0:
-		return ERR_INVALID_PARAMETER
-		
-	if p_from_state_index > states.size() - 1 || p_to_state_index > states.size() - 1:
-		return ERR_INVALID_PARAMETER
-		
-	if get_transition(p_from_state_index, p_from_slot_index, p_to_state_index, p_to_slot_index) != null:
-		return ERR_ALREADY_EXISTS
+	if !states.has(p_from_state) || !states.has(p_to_state) :
+		return null
 		
 	var transition : Transition = Transition.new()
 	
-	transition.from_state_index = p_from_state_index
+	transition.from_state = p_from_state
 	transition.from_slot_index = p_from_slot_index
-	transition.to_state_index = p_to_state_index
+	transition.to_state = p_to_state
 	transition.to_slot_index = p_to_slot_index
 	
 	transitions.push_back(transition)
-	property_list_changed_notify()
 	
-	return OK
+	return transition
 	
-func remove_transition(p_from_state_index : int, p_from_slot_index : int, p_to_state_index : int, p_to_slot_index : int):
-	var transition = get_transition(p_from_state_index, p_from_slot_index, p_to_state_index, p_to_slot_index)
+func remove_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
+	var transition = get_transition(p_from_state, p_from_slot_index, p_to_state, p_to_slot_index)
+	
 	if transition == null:
 		return ERR_DOES_NOT_EXIST
 		
 	transitions.erase(transition)
-	property_list_changed_notify()
 	
 	return OK
 	
@@ -111,9 +126,10 @@ func reassign_transition(p_transition, p_from_slot_index : int, p_to_slot_index 
 	
 	return OK
 	
-func get_transition(p_from_state_index : int, p_from_slot_index : int, p_to_state_index : int, p_to_slot_index : int):
+func get_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
 	for transition in transitions:
-		if transition.from_state_index != p_from_state_index || transition.to_state_index != p_to_state_index:
+		transition = transition as Transition
+		if transition.from_state != p_from_state || transition.to_state != p_to_state:
 			continue
 			
 		if transition.from_slot_index == p_from_slot_index && transition.to_slot_index == p_to_slot_index:
@@ -121,34 +137,38 @@ func get_transition(p_from_state_index : int, p_from_slot_index : int, p_to_stat
 	
 	return null
 	
-func get_attached_connections(p_state_index : int):
+func get_attached_connections(p_state : State):
 	var connections = []
 	
 	for transition in transitions:
-		if transition.from_state_index == p_state_index || transition.to_state_index == p_state_index:
+		transition = transition as Transition
+		
+		if transition.from_state == p_state || transition.to_state == p_state:
 			connections.push_back(transition)
 			
 	return connections
 	
-func get_outgoing_connections(p_from_state_index : int, p_from_slot_index : int):
+func get_outgoing_connections(p_from_state : State, p_from_slot_index : int):
 	var connections = []
 	
 	for transition in transitions:
-		if transition.from_state_index == p_from_state_index && transition.from_slot_index == p_from_slot_index:
+		transition = transition as Transition
+		
+		if transition.from_state == p_from_state && transition.from_slot_index == p_from_slot_index:
 			connections.push_back(transition)
 			
 	return connections
 	
-func get_incomming_connections(p_to_state_index : int, p_to_slot_index : int):
+func get_incomming_connections(p_to_state : State, p_to_slot_index : int):
 	var connections = []
 	
 	for transition in transitions:
-		if transition.to_state_index == p_to_state_index && transition.to_slot_index == p_to_slot_index:
+		transition = transition as Transition
+		
+		if transition.to_state == p_to_state && transition.to_slot_index == p_to_slot_index:
 			connections.push_back(transition)
 			
 	return connections
 	
-func update_reroute_points(p_transition : Transition, p_reroute_points : Array):
+func update_reroute_points(p_transition : Transition, p_reroute_points : PoolVector2Array):
 	p_transition.reroute_points = p_reroute_points
-	
-	print("Reroute points updated")

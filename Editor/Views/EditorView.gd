@@ -35,12 +35,12 @@ func initialize_view():
 	header_button_graph.disabled = disabled
 	
 	var popup = header_button_graph.get_popup()
-	popup.add_icon_item(theme.get_icon("New", "EditorIcons"), "Create new", CREATE_NEW)
+	popup.add_icon_item(theme.get_icon("New", "EditorIcons"), "Create new", PopupMenuItems.CREATE_NEW)
 	popup.add_separator()
-	popup.add_icon_item(theme.get_icon("Load", "EditorIcons"), "Open", OPEN)
-	popup.add_icon_item(theme.get_icon("Save", "EditorIcons"), "Save As", SAVE_AS)
+	popup.add_icon_item(theme.get_icon("Load", "EditorIcons"), "Open", PopupMenuItems.OPEN)
+	popup.add_icon_item(theme.get_icon("Save", "EditorIcons"), "Save As", PopupMenuItems.SAVE_AS)
 	popup.add_separator()
-	popup.add_icon_item(theme.get_icon("Duplicate", "EditorIcons"), "Make unique", MAKE_UNIQUE)
+	popup.add_icon_item(theme.get_icon("Duplicate", "EditorIcons"), "Make unique", PopupMenuItems.MAKE_UNIQUE)
 	
 	popup.connect("id_pressed", self, "on_header_button_graph_id_pressed")
 	

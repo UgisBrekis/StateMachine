@@ -2,16 +2,14 @@ tool
 extends Node
 class_name StateMachine
 
-const StateMachineGraph = preload("Resources/StateMachineGraph.gd")
+const Graph = preload("Resources/StateMachineGraph.gd")
 
 export(bool) var autostart = true
 
-var _active_state_id : int = -1
-var _active_state : StateBase = null
+var graph : Graph = null
 
-var active_state : StateBase = null setget , get_active_state
-
-var graph = null
+var active_state : Graph.State = null
+var active_state_instance : StateBase = null
 
 # Signals
 signal started
@@ -23,25 +21,28 @@ func _set(property, value):
 		graph = value
 		return true
 		
-	if graph != null:
-		if graph.selected_state != null:
-			for cached_item in graph.selected_state.property_cache:
+	if Engine.editor_hint:
+		if active_state != null:
+			for cached_item in active_state.property_cache:
 				if property == "Selected state/%s" % [cached_item.name]:
-					graph.selected_state.properties[cached_item.name] = value
+					active_state.properties[cached_item.name] = value
 					return true
 	
 func _get(property):
 	if property == "graph":
 		return graph
 	
-	if graph != null:
-		if graph.selected_state != null:
-			for cached_item in graph.selected_state.property_cache:
+	if Engine.editor_hint:
+		if active_state != null:
+			for cached_item in active_state.property_cache:
 				if property == "Selected state/%s" % [cached_item.name]:
-					return graph.selected_state.properties[cached_item.name]
+					return active_state.properties[cached_item.name]
 	
 func _get_property_list():
 	var property_list = []
+	
+	if !Engine.editor_hint:
+		return property_list
 	
 	if graph == null:
 		return property_list
@@ -52,10 +53,10 @@ func _get_property_list():
 		"usage" : PROPERTY_USAGE_STORAGE
 	}]
 	
-	if graph.selected_state == null:
+	if active_state == null:
 		return property_list
 		
-	for cached_item in graph.selected_state.property_cache:
+	for cached_item in active_state.property_cache:
 		var property = {
 			"name" : "Selected state/%s" % [cached_item.name],
 			"type" : cached_item.type,
@@ -75,9 +76,6 @@ func _ready():
 	if autostart:
 		start()
 
-func get_active_state():
-	return _active_state
-	
 func start(p_args = []):
 	if graph == null:
 		return
@@ -85,64 +83,85 @@ func start(p_args = []):
 	if graph.start_state_id == -1:
 		return
 		
-	instantiate_next_state(graph.start_state_id, p_args)
+	instantiate_next_state(graph.states[graph.start_state_id], p_args)
 	
 	emit_signal("started")
 	
 func stop():
+	if active_state_instance != null:
+		active_state_instance.queue_free()
+	
+	active_state = null
+	
 	emit_signal("stopped")
 	
-func on_transition_requested(p_index, p_args = []):
+func on_transition_requested(p_output, p_args : Array = []):
 	# Can only transition if there is active state
-	if _active_state == null:
+	if active_state == null || active_state_instance == null:
+		stop()
 		return
 	
 	# Stop current active state
-	_active_state.disconnect("transition_requested", self, "on_transition_requested")
-	_active_state.on_stop()
-	_active_state.queue_free()
+	active_state_instance.disconnect("transition_requested", self, "on_transition_requested")
+	active_state_instance.on_stop()
+	active_state_instance.queue_free()
+	
+	# Find output index
+	var output_index = -1
+	
+	if typeof(p_output) == TYPE_INT:
+		if p_output in range(active_state.outputs.size()):
+			output_index = p_output
+		
+	elif typeof(p_output) == TYPE_STRING:
+		for i in active_state.outputs.size():
+			if p_output == active_state.outputs[i]:
+				output_index = i
+		
+				break
+		
+	else:
+		stop()
+		return
+	
+	if output_index == -1:
+		print("Couldn't find output: %s" % [p_output])
+		return
 	
 	# Find next state index
 	for transition in graph.transitions:
-		if transition.from_state_index != _active_state_id:
-			continue
-			
-		if transition.from_slot_index != p_index:
-			continue
-			
-		# Transition found, try to instantiate next state
-		instantiate_next_state(transition.to_state_index, p_args)
-		return
+		transition = transition as Graph.Transition
+		
+		if transition.from_state == active_state && transition.from_slot_index != output_index:
+			# Transition found, try to instantiate next state
+			instantiate_next_state(transition.to_state, p_args)
+			return
 		
 	# Transition does not exist
 	stop()
 	
-func instantiate_next_state(p_index, p_args = []):
-	# TO-DO -> validation
-	
-	# Assign active state id
-	_active_state_id = p_index
-	
+func instantiate_next_state(p_state : Graph.State, p_args : Array = []):
 	# Check if the script is attached to the next state
-	var next_state = graph.states[_active_state_id]
-	
-	if next_state.state_script == null:
-		_active_state_id = -1
+	if p_state.state_script == null:
 		stop()
 		return
 		
-	_active_state = next_state.state_script.new()
+	active_state = p_state
 	
-	add_child(_active_state)
+	active_state_instance = active_state.state_script.new()
+	
+	add_child(active_state_instance)
 		
 	# Apply properties
-	_active_state.owner = get_parent()
+	active_state_instance.owner = get_parent()
 		
-	for key in graph.states[_active_state_id].properties.keys():
-		_active_state.set(key, graph.states[_active_state_id].properties[key])
+	for key in active_state.properties.keys():
+		active_state_instance.set(key, active_state.properties[key])
 		
-	_active_state.connect("transition_requested", self, "on_transition_requested")
+	active_state_instance.connect("transition_requested", self, "on_transition_requested")
 	
-	_active_state.on_start(p_args)
+	active_state_instance.on_start(p_args)
+	
+	emit_signal("state_changed")
 	
 	
