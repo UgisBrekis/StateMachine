@@ -73,12 +73,6 @@ func _gui_input(event):
 				
 				on_reroute_points_changed(connection)
 
-func on_reconnect_requested(p_connection : Connection, p_from_index : int, p_to_index : int):
-	emit_signal("reconnect_requested", p_connection, p_from_index, p_to_index)
-	
-func on_remove_requested(p_connection : Connection):
-	emit_signal("remove_requested", p_connection)
-	
 func on_reroute_points_changed(p_connection : Connection):
 	emit_signal("reroute_points_changed", p_connection)
 
@@ -92,8 +86,6 @@ func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : Grap
 	
 	connection.initialize(connection_width, display_scale, connection_curvature, p_from, p_from_index, p_to, p_to_index, p_reroute_points)
 	
-	connection.connect("reconnect_requested", self, "on_reconnect_requested")
-	connection.connect("remove_requested", self, "on_remove_requested")
 	connection.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	return OK
@@ -107,12 +99,6 @@ func remove_connection(p_from : GraphEditorNode, p_from_index: int, p_to : Graph
 	connection.queue_free()
 	
 	return OK
-	
-func reassign_connection(p_connection : Connection, p_from_index : int, p_to_index : int):
-	p_connection.from_slot_index = p_from_index
-	p_connection.to_slot_index = p_to_index
-	
-	p_connection.update_positions()
 	
 func clear():
 	for child in get_children():

@@ -10,11 +10,14 @@ const GraphEditorStateNode = preload("GraphEditorStateNode.gd")
 var snapping_enabled = false setget set_snapping_enabled
 var grid_cell_size = 10
 
+var valid_connection_pairs = []
+
 var selection = []
 
 signal selection_changed
 signal inspect_state_request(p_state)
 signal state_node_context_menu_request(p_state_node)
+signal begin_connection_drag_request(p_node, p_input, p_slot_index, snap_positions)
 
 func _init(p_theme : Theme):
 	theme = p_theme
@@ -172,20 +175,11 @@ func on_graph_node_drag_request(p_relative_position : Vector2):
 		
 func on_node_socket_drag_started(p_node : GraphEditorNode, p_input : bool, p_slot_index : int):
 	var slot_type = p_node.get_slot_type(p_input, p_slot_index)
-	var socket_position = p_node.get_socket_position(p_input, p_slot_index)
 	
-	# Find snap positions for this type of slot
 	var valid_types = get_valid_connection_types(p_input, slot_type)
 	var snap_positions : PoolVector2Array = get_socket_positions(valid_types)
 	
-	# If it's output slot, remove already existing connection
-	if !p_input:
-		var output_connections = connections_layer.get_outgoing_connections(p_node, p_slot_index)
-		
-		for connection in output_connections:
-			remove_transition(connection.from_node, connection.from_slot_index, connection.to_node, connection.to_slot_index)
-	
-	emit_signal("begin_connection_drag_request", p_input, socket_position, snap_positions)
+	emit_signal("begin_connection_drag_request", p_node, p_input, p_slot_index, snap_positions)
 	
 func get_valid_connection_types(p_is_input : bool, p_type : int):
 	var valid_types : PoolIntArray = PoolIntArray()
@@ -202,11 +196,8 @@ func get_valid_connection_types(p_is_input : bool, p_type : int):
 func get_socket_positions(p_valid_types : PoolIntArray = PoolIntArray()):
 	var socket_positions : PoolVector2Array = PoolVector2Array()
 	
-	for child in nodes_layer.get_children():
-		if !(child is GraphEditorNode):
-			return
-			
-		var node : GraphEditorNode = child
+	for node in get_children():
+		node = node as GraphEditorNode
 		
 		var input_slot_count = node.get_input_slot_count()
 		var output_slot_count = node.get_output_slot_count()

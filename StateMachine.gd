@@ -97,7 +97,7 @@ func stop():
 	
 func on_transition_requested(p_output, p_args : Array = []):
 	# Can only transition if there is active state
-	if active_state == null || active_state_instance == null:
+	if active_state == null:
 		stop()
 		return
 	
@@ -132,7 +132,7 @@ func on_transition_requested(p_output, p_args : Array = []):
 	for transition in graph.transitions:
 		transition = transition as Graph.Transition
 		
-		if transition.from_state == active_state && transition.from_slot_index != output_index:
+		if transition.from_state == active_state && transition.from_slot_index == output_index:
 			# Transition found, try to instantiate next state
 			instantiate_next_state(transition.to_state, p_args)
 			return

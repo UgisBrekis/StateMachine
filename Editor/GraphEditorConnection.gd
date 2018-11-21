@@ -12,10 +12,6 @@ var to_slot_index : int = -1
 var from_slot_text : String
 var to_slot_text : String
 
-# Signals
-signal reconnect_requested(p_transition, p_from_slot_index, p_to_slot_index)
-signal remove_requested(p_transition)
-
 func initialize(p_width : float, p_display_scale : float, p_curvature : float, p_from : GraphEditorNode, p_from_slot : int, p_to : GraphEditorNode, p_to_slot : int, p_reroute_points : PoolVector2Array):
 	create_texture()
 	width = p_width
@@ -46,40 +42,13 @@ func initialize(p_width : float, p_display_scale : float, p_curvature : float, p
 	from_node.connect("resized", self, "on_from_node_resized")
 	
 	to_node.connect("offset_changed", self, "on_to_node_offset_changed")
+	to_node.connect("resized", self, "on_to_node_resized")
 		
 func on_from_node_resized():
-	call_deferred("check_validity")
-		
-func check_validity():
-	if from_node == null:
-		emit_signal("remove_requested", self)
-		return
-		
-	var from_slot = null
+	call_deferred("update_from_position")
 	
-	if from_slot_index <= from_node.get_output_slot_count() - 1:
-		from_slot = from_node.get_output_slot(from_slot_index)
-	
-	if from_slot != null:
-		if from_slot.text == from_slot_text:
-			update_from_position()
-			return
-		
-	# Check if slot with the same name is still present
-	var new_from_slot_index = -1
-	
-	for i in from_node.get_output_slot_count():
-		if from_node.get_output_slot(i).text == from_slot_text:
-			new_from_slot_index = i
-			break
-	
-	# There is no slot with the same name in the node
-	if new_from_slot_index == -1:
-		emit_signal("remove_requested", self)
-		return
-		
-	# Assign new index and update position
-	emit_signal("reconnect_requested", self, new_from_slot_index, to_slot_index)
+func on_to_node_resized():
+	call_deferred("update_to_position")
 	
 func on_from_node_offset_changed():
 	update_from_position()

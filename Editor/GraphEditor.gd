@@ -29,8 +29,6 @@ signal selection_changed(p_state)
 signal set_start_state_request(p_state_node)
 signal inspect_state_request(p_state)
 
-signal remove_connection_request(p_from, p_from_index, p_to, p_to_index)
-signal reconnect_connection_request(p_connection, p_from_index, p_to_index)
 signal reroute_points_changed(p_connection)
 
 func _init(p_theme : Theme):
@@ -50,14 +48,13 @@ func _enter_tree():
 	scroll_container.connect("state_scripts_dropped", self, "on_state_scripts_dropped")
 	
 	# Connections layer
-	connections_layer.connect("reconnect_requested", self, "on_connection_reconnect_requested")
-	connections_layer.connect("remove_requested", self, "on_connection_remove_requested")
 	connections_layer.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	# Nodes layer
 	nodes_layer.connect("selection_changed", self, "on_nodes_layer_selection_changed")
 	nodes_layer.connect("inspect_state_request", self, "on_inspect_state_request")
 	nodes_layer.connect("state_node_context_menu_request", self, "on_state_node_context_menu_request")
+	nodes_layer.connect("begin_connection_drag_request", self, "on_begin_connection_drag_request")
 	
 	# Overlay Layer
 	overlay_layer.connect("connection_drag_completed", self, "on_overlay_layer_connection_drag_completed")
@@ -94,9 +91,6 @@ func on_scroll_container_left_click_down():
 func on_scroll_container_context_menu_request():
 	show_popup_menu(null)
 
-func on_connection_reconnect_requested(p_connection, p_from_index : int, p_to_index : int):
-	emit_signal("reconnect_connection_request", p_connection, p_from_index, p_to_index)
-	
 func on_reroute_points_changed(p_connection):
 	update_reroute_points(p_connection)
 	
@@ -115,7 +109,16 @@ func on_inspect_state_request(p_state):
 func on_state_node_context_menu_request(p_node):
 	show_popup_menu(p_node)
 	
-func on_begin_connection_drag_request(p_input : bool, socket_position : Vector2, snap_positions : PoolVector2Array):
+func on_begin_connection_drag_request(p_node : GraphEditorNode, p_input : bool, p_slot_index : int, snap_positions : PoolVector2Array):
+	var socket_position = p_node.get_socket_position(p_input, p_slot_index)
+	
+	# If it's output slot, remove already existing connection
+	if !p_input:
+		var output_connections = connections_layer.get_outgoing_connections(p_node, p_slot_index)
+		
+		for connection in output_connections:
+			remove_transition(connection.from_node, connection.from_slot_index, connection.to_node, connection.to_slot_index)
+	
 	overlay_layer.begin_connection_drag(p_input, socket_position, snap_positions)
 	
 func on_overlay_layer_connection_drag_completed(p_from_position : Vector2, p_to_position : Vector2, p_is_empty_space : bool):
@@ -227,7 +230,7 @@ func set_start_state(p_state_node : GraphEditorStateNode):
 	if graph.start_state_id != -1:
 		var default_state = graph.states[graph.start_state_id]
 		var state_node = nodes_layer.get_state_node(default_state)
-
+		
 		remove_transition(entry_node, 0, state_node, 0)
 
 	create_new_transition(entry_node, 0, p_state_node, 0)
@@ -297,29 +300,16 @@ func create_new_transition(p_from : GraphEditorNode, p_from_index : int, p_to : 
 	if graph == null:
 		return
 
-	# Check if trying to assign new start node
 	if p_from is GraphEditorEntryNode && p_to is GraphEditorStateNode:
 		graph.set_state_as_default(p_to.state)
-
-		if connect_graph_nodes(p_from, p_from_index, p_to, p_to_index) != OK:
-			print("create_new_transition :: Failed to connect entry to state node")
-			return
-
-		print("create_new_transition :: Entry->State transition created!")
-		return
 		
-	p_from = p_from as GraphEditorStateNode
-	p_to = p_to as GraphEditorStateNode
-
-	if graph.add_transition(p_from.state, p_from_index, p_to.state, p_to_index) == null:
-		print("create_new_transition :: Failed to add transition")
+	elif p_from is GraphEditorStateNode && p_to is GraphEditorStateNode:
+		graph.add_transition(p_from.state, p_from_index, p_to.state, p_to_index)
+		
+	else:
 		return
-
-	if connect_graph_nodes(p_from, p_from_index, p_to, p_to_index) != OK:
-		print("create_new_transition :: Failed to connect state node to state node")
-		return
-
-	print("create_new_transition :: Transition added")
+	
+	connections_layer.add_new_connection(p_from, p_from_index, p_to, p_to_index, PoolVector2Array())
 	
 func remove_transition(p_from : GraphEditorNode, p_from_index : int, p_to : GraphEditorNode, p_to_index : int):
 	if graph == null:
@@ -328,26 +318,14 @@ func remove_transition(p_from : GraphEditorNode, p_from_index : int, p_to : Grap
 	# If start node is being disconnected from entry
 	if p_from is GraphEditorEntryNode && p_to is GraphEditorStateNode:
 		graph.set_state_as_default(null)
-
-		if disconnect_graph_nodes(p_from, p_from_index, p_to, p_to_index) != OK:
-			print("remove_transition :: Failed to disconnect Entry->State nodes")
-			return
-
-		print("remove_transition :: Removed Entry-State transition")
+		
+	elif p_from is GraphEditorStateNode && p_to is GraphEditorStateNode:
+		graph.remove_transition(p_from.state, p_from_index, p_to.state, p_to_index)
+		
+	else:
 		return
 	
-	p_from = p_from as GraphEditorStateNode
-	p_to = p_to as GraphEditorStateNode
-	
-	if graph.remove_transition(p_from.state, p_from_index, p_to.state, p_to_index) == null:
-		print("remove_transition :: Failed to remove state->state transition")
-		return
-
-	if disconnect_graph_nodes(p_from, p_from_index, p_to, p_to_index) != OK:
-		print("remove_transition :: Failed to disconnect state->state graph nodes")
-		return
-
-	print("remove transition :: Removed State->State transition")
+	connections_layer.remove_connection(p_from, p_from_index, p_to, p_to_index)
 	
 func update_reroute_points(p_connection):
 	if graph == null:
@@ -407,6 +385,8 @@ func add_valid_connection_pair(p_from_type : int, p_to_type : int):
 	
 	valid_connection_pairs.push_back(pair)
 	
+	nodes_layer.valid_connection_pairs = valid_connection_pairs
+	
 func populate_graph(p_graph : StateMachine.Graph):
 	clear_graph()
 	
@@ -433,7 +413,7 @@ func populate_graph(p_graph : StateMachine.Graph):
 				break
 				
 		if entry_node != null && start_node != null:
-			connect_graph_nodes(entry_node, 0, start_node, 0)
+			connections_layer.add_new_connection(entry_node, 0, start_node, 0, PoolVector2Array())
 		
 	# State transitions
 	for transition in p_graph.transitions:
@@ -464,7 +444,7 @@ func populate_graph(p_graph : StateMachine.Graph):
 		if from_node == null || to_node == null:
 			return
 		
-		connect_graph_nodes(from_node, transition.from_slot_index, to_node, transition.to_slot_index, transition.reroute_points)
+		connections_layer.add_new_connection(from_node, transition.from_slot_index, to_node, transition.to_slot_index, transition.reroute_points)
 	
 func clear_graph():
 	nodes_layer.clear_selection()
@@ -487,20 +467,7 @@ func remove_all_connections_from_node(p_node : GraphEditorNode):
 	
 	return err
 	
-func connect_graph_nodes(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int, p_reroute_points : PoolVector2Array = PoolVector2Array()):
-	if connections_layer.add_new_connection(p_from, p_from_index, p_to, p_to_index, p_reroute_points) != OK:
-		return ERR_BUG
-		
-	return OK
 	
-func disconnect_graph_nodes(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int):
-	if connections_layer.remove_connection(p_from, p_from_index, p_to, p_to_index) != OK:
-		return ERR_BUG
-		
-	return OK
+
 	
-func reconnect_graph_nodes(p_connection, p_from_index : int, p_to_index : int):
-	if connections_layer.reassign_connection(p_connection, p_from_index, p_to_index) != OK:
-		return ERR_BUG
-		
-	return OK
+	
