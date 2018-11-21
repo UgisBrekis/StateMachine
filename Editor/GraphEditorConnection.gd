@@ -35,6 +35,8 @@ func initialize(p_width : float, p_display_scale : float, p_curvature : float, p
 		
 		rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")
 		rerouter.connect("remove_requested", self, "on_rerouter_remove_requested")
+		
+		rerouter.snap_distance = snap_distance
 	
 	call_deferred("update_positions")
 	

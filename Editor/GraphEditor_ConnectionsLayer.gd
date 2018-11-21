@@ -13,20 +13,18 @@ var reroute = {
 	"position" : null
 }
 
-# Signals
-signal connection_added(p_from, p_from_index, p_to, p_to_index)
-signal connection_removed
+var snapping_enabled = false setget set_snapping_enabled
+var grid_cell_size = 10
 
-signal cleared
+# Signals
 signal reroute_points_changed(p_connection)
-signal reconnect_requested(p_connection, p_from_index, p_to_index)
-signal remove_requested(p_connection)
 
 func _init(p_theme : Theme):
 	theme = p_theme
 	display_scale = theme.get_constant("scale", "Editor")
 	connection_width = theme.get_constant("graph_editor_connection_width", "Editor")
 	connection_curvature = theme.get_constant("graph_editor_connection_curvature", "Editor")
+	grid_cell_size = theme.get_constant("graph_editor_grid_cell_size", "Editor")
 	
 func _gui_input(event):
 	if event is InputEventMouseButton:
@@ -72,6 +70,19 @@ func _gui_input(event):
 				connection.add_reroute_point(reroute.position)
 				
 				on_reroute_points_changed(connection)
+
+func set_snapping_enabled(p_snapping_enabled : bool):
+	snapping_enabled = p_snapping_enabled
+	
+	var snap_distance = -1
+	
+	if snapping_enabled:
+		snap_distance = grid_cell_size
+	
+	for connection in get_children():
+		connection = connection as Connection
+		
+		connection.snap_distance = snap_distance
 
 func on_reroute_points_changed(p_connection : Connection):
 	emit_signal("reroute_points_changed", p_connection)

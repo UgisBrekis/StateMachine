@@ -18,6 +18,7 @@ signal selection_changed
 signal inspect_state_request(p_state)
 signal state_node_context_menu_request(p_state_node)
 signal begin_connection_drag_request(p_node, p_input, p_slot_index, snap_positions)
+signal dragged(p_relative)
 
 func _init(p_theme : Theme):
 	theme = p_theme
@@ -172,6 +173,8 @@ func on_graph_node_drag_request(p_relative_position : Vector2):
 		var graph_editor_node = node as GraphEditorNode
 		
 		graph_editor_node.offset += p_relative_position
+		
+	emit_signal("dragged", p_relative_position)
 		
 func on_node_socket_drag_started(p_node : GraphEditorNode, p_input : bool, p_slot_index : int):
 	var slot_type = p_node.get_slot_type(p_input, p_slot_index)

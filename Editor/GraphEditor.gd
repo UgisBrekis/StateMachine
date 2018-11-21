@@ -55,6 +55,7 @@ func _enter_tree():
 	nodes_layer.connect("inspect_state_request", self, "on_inspect_state_request")
 	nodes_layer.connect("state_node_context_menu_request", self, "on_state_node_context_menu_request")
 	nodes_layer.connect("begin_connection_drag_request", self, "on_begin_connection_drag_request")
+	nodes_layer.connect("dragged", self, "on_nodes_layer_dragged")
 	
 	# Overlay Layer
 	overlay_layer.connect("connection_drag_completed", self, "on_overlay_layer_connection_drag_completed")
@@ -80,6 +81,7 @@ func set_disabled(p_disabled : bool):
 func set_snapping_enabled(p_snapping_enabled : bool):
 	snapping_enabled = p_snapping_enabled
 	
+	connections_layer.snapping_enabled = snapping_enabled
 	nodes_layer.snapping_enabled = snapping_enabled
 
 func on_scroll_container_left_click_down():
@@ -120,6 +122,9 @@ func on_begin_connection_drag_request(p_node : GraphEditorNode, p_input : bool, 
 			remove_transition(connection.from_node, connection.from_slot_index, connection.to_node, connection.to_slot_index)
 	
 	overlay_layer.begin_connection_drag(p_input, socket_position, snap_positions)
+	
+func on_nodes_layer_dragged(p_relative : Vector2):
+	emit_signal("graph_edited")
 	
 func on_overlay_layer_connection_drag_completed(p_from_position : Vector2, p_to_position : Vector2, p_is_empty_space : bool):
 	if p_is_empty_space:
@@ -195,7 +200,7 @@ func on_popup_menu_id_pressed(p_id):
 			if !(nodes_layer.selection[0] is GraphEditorStateNode):
 				return
 			
-			emit_signal("set_start_state_request", nodes_layer.selection[0])
+			set_start_state(nodes_layer.selection[0])
 			
 		PopupMenuIDs.DUPLICATE_STATE:
 			var position_offset = Vector2(20, 20) * display_scale
