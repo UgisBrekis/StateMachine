@@ -3,11 +3,11 @@ extends Panel
 
 const GRAPH_SHEET_SIZE = 4096
 
-const GraphEditorScrollContainer = preload("GraphEditor_ScrollContainer.gd")
+const GraphEditorScrollContainer = preload("../GraphEditor_ScrollContainer.gd")
 
-const ConnectionsLayer = preload("GraphEditor_ConnectionsLayer.gd")
-const NodesLayer = preload("GraphEditor_NodesLayer.gd")
-const OverlayLayer = preload("GraphEditor_OverlayLayer.gd")
+const ConnectionsLayer = preload("../GraphEditor_ConnectionsLayer.gd")
+const NodesLayer = preload("../GraphEditor_NodesLayer.gd")
+const OverlayLayer = preload("../GraphEditor_OverlayLayer.gd")
 
 var scroll_container : GraphEditorScrollContainer = null
 
@@ -28,7 +28,7 @@ func initialize_view():
 	
 	# Layers
 	connections_layer = ConnectionsLayer.new(theme)
-	nodes_layer = NodesLayer.new()
+	nodes_layer = NodesLayer.new(theme)
 	overlay_layer = OverlayLayer.new(theme)
 	
 	connections_layer.mouse_filter = Control.MOUSE_FILTER_PASS

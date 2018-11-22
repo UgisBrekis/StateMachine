@@ -13,20 +13,18 @@ var reroute = {
 	"position" : null
 }
 
-# Signals
-signal connection_added(p_from, p_from_index, p_to, p_to_index)
-signal connection_removed
+var snapping_enabled = false setget set_snapping_enabled
+var grid_cell_size = 10
 
-signal cleared
+# Signals
 signal reroute_points_changed(p_connection)
-signal reconnect_requested(p_connection, p_from_index, p_to_index)
-signal remove_requested(p_connection)
 
 func _init(p_theme : Theme):
 	theme = p_theme
 	display_scale = theme.get_constant("scale", "Editor")
 	connection_width = theme.get_constant("graph_editor_connection_width", "Editor")
 	connection_curvature = theme.get_constant("graph_editor_connection_curvature", "Editor")
+	grid_cell_size = theme.get_constant("graph_editor_grid_cell_size", "Editor")
 	
 func _gui_input(event):
 	if event is InputEventMouseButton:
@@ -73,12 +71,19 @@ func _gui_input(event):
 				
 				on_reroute_points_changed(connection)
 
-func on_reconnect_requested(p_connection : Connection, p_from_index : int, p_to_index : int):
-	emit_signal("reconnect_requested", p_connection, p_from_index, p_to_index)
+func set_snapping_enabled(p_snapping_enabled : bool):
+	snapping_enabled = p_snapping_enabled
 	
-func on_remove_requested(p_connection : Connection):
-	emit_signal("remove_requested", p_connection)
+	var snap_distance = -1
 	
+	if snapping_enabled:
+		snap_distance = grid_cell_size
+	
+	for connection in get_children():
+		connection = connection as Connection
+		
+		connection.snap_distance = snap_distance
+
 func on_reroute_points_changed(p_connection : Connection):
 	emit_signal("reroute_points_changed", p_connection)
 
@@ -92,8 +97,6 @@ func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : Grap
 	
 	connection.initialize(connection_width, display_scale, connection_curvature, p_from, p_from_index, p_to, p_to_index, p_reroute_points)
 	
-	connection.connect("reconnect_requested", self, "on_reconnect_requested")
-	connection.connect("remove_requested", self, "on_remove_requested")
 	connection.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	return OK
@@ -108,18 +111,9 @@ func remove_connection(p_from : GraphEditorNode, p_from_index: int, p_to : Graph
 	
 	return OK
 	
-func reassign_connection(p_connection : Connection, p_from_index : int, p_to_index : int):
-	p_connection.from_slot_index = p_from_index
-	p_connection.to_slot_index = p_to_index
-	
-	p_connection.update_positions()
-	
 func clear():
 	for child in get_children():
-		if !(child is Connection):
-			continue
-			
-		child.queue_free()
+		child.free()
 	
 func get_connection(p_from : GraphEditorNode, p_from_index: int, p_to : GraphEditorNode, p_to_index : int):
 	for child in get_children():

@@ -131,6 +131,8 @@ func add_reroute_point(p_position : Vector2):
 	rerouter.connect("offset_changed", self, "on_rerouter_offset_changed")
 	rerouter.connect("remove_requested", self, "on_rerouter_remove_requested")
 	
+	rerouter.snap_distance = snap_distance
+	
 	update_shape()
 	
 func remove_reroute_point(p_index : int):

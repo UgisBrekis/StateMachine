@@ -1,5 +1,5 @@
 tool
-extends "GraphEditorNodeView.gd"
+extends "Views/GraphEditorNodeView.gd"
 
 # Slot constants
 const Slot = preload("GraphEditorNodeSlot.gd")
