@@ -31,6 +31,8 @@ signal inspect_state_request(p_state)
 
 signal reroute_points_changed(p_connection)
 
+signal graph_edited
+
 func _init(p_theme : Theme):
 	theme = p_theme
 	initialize_view()
@@ -257,8 +259,7 @@ func remove_state(p_state : StateMachine.Graph.State):
 		return
 
 	# Make sure selection is cleared
-	if p_state == graph.selected_state:
-		graph.selected_state = null
+	nodes_layer.clear_selection()
 
 	# Remove all transitions connected to this state
 	var redundant_transitions = []

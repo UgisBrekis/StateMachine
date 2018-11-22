@@ -36,15 +36,15 @@ func connect_signals():
 	editor_selection.connect("selection_changed", self, "on_editor_interface_selection_changed")
 
 	graph_editor.connect("selection_changed", self, "on_graph_editor_selection_changed")
-
 	graph_editor.connect("inspect_state_request", self, "on_inspect_state_request")
+	graph_editor.connect("graph_edited", self, "on_graph_edited")
 
 func disconnect_signals():
 	editor_selection.disconnect("selection_changed", self, "on_editor_interface_selection_changed")
 
 	graph_editor.disconnect("selection_changed", self, "on_graph_editor_selection_changed")
-
 	graph_editor.disconnect("inspect_state_request", self, "on_inspect_state_request")
+	graph_editor.disconnect("graph_edited", self, "on_graph_edited")
 
 func on_editor_interface_selection_changed():
 	var selected_nodes = editor_selection.get_selected_nodes()
@@ -168,6 +168,12 @@ func on_inspect_state_request(p_state : StateMachine.Graph.State):
 
 	# Show state properties in inspector
 	editor_interface.inspect_object(p_state)
+
+func on_graph_edited():
+	if active_state_machine == null:
+		return
+		
+	active_state_machine.property_list_changed_notify()
 
 func create_new_state_machine_graph():
 	if active_state_machine == null:
