@@ -182,6 +182,8 @@ func create_new_state_machine_graph():
 	var graph_resource = StateMachine.Graph.new()
 	active_state_machine.graph = graph_resource.duplicate()
 	
+	graph_editor.graph = active_state_machine.graph
+	
 	active_state_machine.property_list_changed_notify()
 
 	editor_interface.inspect_object(active_state_machine)
