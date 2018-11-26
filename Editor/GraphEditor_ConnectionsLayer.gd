@@ -97,6 +97,13 @@ func add_new_connection(p_from : GraphEditorNode, p_from_index: int, p_to : Grap
 	
 	connection.initialize(connection_width, display_scale, connection_curvature, p_from, p_from_index, p_to, p_to_index, p_reroute_points)
 	
+	var snap_distance = -1
+	
+	if snapping_enabled:
+		snap_distance = grid_cell_size
+		
+	connection.snap_distance = snap_distance
+	
 	connection.connect("reroute_points_changed", self, "on_reroute_points_changed")
 	
 	return OK

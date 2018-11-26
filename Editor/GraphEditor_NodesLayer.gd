@@ -44,6 +44,14 @@ func add_entry_node(p_graph : StateMachine.Graph):
 	
 	entry_node.initialize(p_graph)
 	
+	# Apply snapping if activated
+	var snap_distance = -1
+	
+	if snapping_enabled:
+		snap_distance = grid_cell_size
+		
+	entry_node.snap_distance = snap_distance
+	
 	entry_node.connect("left_clicked", self, "on_node_left_clicked", [entry_node])
 	entry_node.connect("drag_request", self, "on_graph_node_drag_request")
 	entry_node.connect("socket_drag_started", self, "on_node_socket_drag_started")
@@ -61,6 +69,14 @@ func add_state_node(p_state):
 	add_child(state_node)
 	
 	state_node.initialize(p_state)
+	
+	# Apply snapping if activated
+	var snap_distance = -1
+	
+	if snapping_enabled:
+		snap_distance = grid_cell_size
+		
+	state_node.snap_distance = snap_distance
 	
 	state_node.connect("left_clicked", self, "on_node_left_clicked", [state_node])
 	state_node.connect("right_clicked", self, "on_state_node_right_clicked", [state_node])
