@@ -91,6 +91,8 @@ func start(p_args = []):
 	
 func stop():
 	if active_state_instance != null:
+		active_state_instance.disconnect("transition_requested", self, "on_transition_requested")
+		active_state_instance.on_stop()
 		active_state_instance.queue_free()
 	
 	active_state = null
@@ -103,32 +105,34 @@ func on_transition_requested(p_output, p_args : Array = []):
 		stop()
 		return
 	
+	# Find output index
+	var output_index = -1
+	
+	match typeof(p_output):
+		TYPE_INT:
+			if p_output in range(active_state.outputs.size()):
+				output_index = p_output
+				
+		TYPE_STRING:
+			for i in active_state.outputs.size():
+				if p_output == active_state.outputs[i]:
+					output_index = i
+			
+					break
+					
+		_:
+			stop()
+			return
+		
+	if output_index == -1:
+		print("State machine :: Output[ %s ] does not exist" % [p_output])
+		stop()
+		return
+	
 	# Stop current active state
 	active_state_instance.disconnect("transition_requested", self, "on_transition_requested")
 	active_state_instance.on_stop()
 	active_state_instance.queue_free()
-	
-	# Find output index
-	var output_index = -1
-	
-	if typeof(p_output) == TYPE_INT:
-		if p_output in range(active_state.outputs.size()):
-			output_index = p_output
-		
-	elif typeof(p_output) == TYPE_STRING:
-		for i in active_state.outputs.size():
-			if p_output == active_state.outputs[i]:
-				output_index = i
-		
-				break
-		
-	else:
-		stop()
-		return
-	
-	if output_index == -1:
-		print("Couldn't find output: %s" % [p_output])
-		return
 	
 	# Find next state index
 	for transition in graph.transitions:
@@ -140,6 +144,7 @@ func on_transition_requested(p_output, p_args : Array = []):
 			return
 		
 	# Transition does not exist
+	print("State machine couldn't perform a transition")
 	stop()
 	
 func instantiate_next_state(p_state : Graph.State, p_args : Array = []):
