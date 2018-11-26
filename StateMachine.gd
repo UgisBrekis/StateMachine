@@ -26,6 +26,8 @@ func _set(property, value):
 			for cached_item in active_state.property_cache:
 				if property == "Selected state/%s" % [cached_item.name]:
 					active_state.properties[cached_item.name] = value
+					
+					graph.property_list_changed_notify()
 					return true
 	
 func _get(property):
@@ -156,7 +158,17 @@ func instantiate_next_state(p_state : Graph.State, p_args : Array = []):
 	active_state_instance.owner = get_parent()
 		
 	for key in active_state.properties.keys():
-		active_state_instance.set(key, active_state.properties[key])
+		var value = active_state.properties[key]
+		
+		# Resolve NodePaths
+		if typeof(value) == TYPE_NODE_PATH:
+			var path : String = str(value)
+			
+			path = path.insert(0, "../")
+			
+			value = NodePath(path)
+		
+		active_state_instance.set(key, value)
 		
 	active_state_instance.connect("transition_requested", self, "on_transition_requested")
 	
