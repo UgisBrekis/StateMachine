@@ -6,8 +6,7 @@ const GraphEditor = preload("../GraphEditor.gd")
 enum PopupMenuItems {
 	CREATE_NEW,
 	OPEN,
-	SAVE_AS,
-	MAKE_UNIQUE
+	SAVE_AS
 }
 
 # Nodes
@@ -39,8 +38,6 @@ func initialize_view():
 	popup.add_separator()
 	popup.add_icon_item(theme.get_icon("Load", "EditorIcons"), "Open", PopupMenuItems.OPEN)
 	popup.add_icon_item(theme.get_icon("Save", "EditorIcons"), "Save As", PopupMenuItems.SAVE_AS)
-	popup.add_separator()
-	popup.add_icon_item(theme.get_icon("Duplicate", "EditorIcons"), "Make unique", PopupMenuItems.MAKE_UNIQUE)
 	
 	popup.connect("id_pressed", self, "on_header_button_graph_id_pressed")
 	

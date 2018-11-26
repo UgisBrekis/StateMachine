@@ -80,9 +80,6 @@ func on_header_button_graph_id_pressed(p_id : int):
 		PopupMenuItems.SAVE_AS:
 			show_save_file_dialog()
 
-		PopupMenuItems.MAKE_UNIQUE:
-			make_unique_state_machine_graph()
-
 func show_open_file_dialog():
 	file_dialog.mode = FileDialog.MODE_OPEN_FILE
 	file_dialog.access = FileDialog.ACCESS_RESOURCES
@@ -99,22 +96,6 @@ func show_save_file_dialog():
 
 	file_dialog.popup_centered_ratio()
 
-func make_unique_state_machine_graph():
-	if active_state_machine.graph == null:
-		return
-
-	var graph_resource = active_state_machine.graph.duplicate()
-
-	graph_editor.clear_graph()
-
-	active_state_machine.graph = graph_resource
-
-	graph_editor.populate_graph(active_state_machine.graph)
-
-	active_state_machine.property_list_changed_notify()
-
-	editor_interface.inspect_object(active_state_machine)
-
 func on_file_dialog_file_selected(p_path):
 	match file_dialog.mode:
 		FileDialog.MODE_OPEN_FILE:
@@ -124,8 +105,9 @@ func on_file_dialog_file_selected(p_path):
 				return
 
 			active_state_machine.graph = graph_resource
-			
 			active_state_machine.property_list_changed_notify()
+			
+			graph_editor.graph = active_state_machine.graph
 
 			editor_interface.inspect_object(active_state_machine)
 
@@ -133,8 +115,9 @@ func on_file_dialog_file_selected(p_path):
 			ResourceSaver.save(p_path, active_state_machine.graph)
 
 			active_state_machine.graph = ResourceLoader.load(p_path)
-			
 			active_state_machine.property_list_changed_notify()
+			
+			graph_editor.graph = active_state_machine.graph
 
 			editor_interface.inspect_object(active_state_machine)
 
