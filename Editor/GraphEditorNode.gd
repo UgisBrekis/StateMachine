@@ -54,6 +54,9 @@ func _input(event):
 				BUTTON_LEFT:
 					if pressed:
 						pressed = false
+						
+					if snap_distance > -1:
+						apply_snapped_offset()
 		
 	elif event is InputEventMouseMotion:
 		if pressed && is_selected:
@@ -101,6 +104,10 @@ func set_offset(p_offset : Vector2):
 func set_snap_distance(p_snap_distance):
 	snap_distance = p_snap_distance
 	
+	if snap_distance > -1:
+		apply_snapped_offset()
+	
+func apply_snapped_offset():
 	self.offset = offset.snapped(Vector2(snap_distance, snap_distance) / display_scale)
 	
 func add_slot(p_is_input : bool, p_type : int, p_color : Color, p_text : String):
