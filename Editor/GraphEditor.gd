@@ -23,6 +23,8 @@ var valid_connection_pairs = []
 
 var display_scale : float = 1.0
 
+var undo_redo : UndoRedo
+
 # Signals
 signal selection_changed(p_state)
 
@@ -206,7 +208,22 @@ func on_popup_menu_id_pressed(p_id):
 			if !(nodes_layer.selection[0] is GraphEditorStateNode):
 				return
 			
-			set_default_state(nodes_layer.selection[0])
+			undo_redo.create_action("Set default state")
+			
+			undo_redo.add_do_method(self, "set_default_state", nodes_layer.selection[0])
+			
+			var default_state = graph.get_default_state()
+			var entry_node = nodes_layer.get_entry_node()
+			
+			if default_state == null:
+				undo_redo.add_undo_method(self, "remove_transition", entry_node, 0, nodes_layer.selection[0], 0)
+				
+			else:
+				var state_node = nodes_layer.get_state_node(default_state)
+				
+				undo_redo.add_undo_method(self, "set_default_state", state_node)
+			
+			undo_redo.commit_action()
 			
 		PopupMenuIDs.DUPLICATE_STATE:
 			var position_offset = Vector2(20, 20) * display_scale
@@ -244,7 +261,7 @@ func set_default_state(p_state_node : GraphEditorStateNode):
 		var state_node = nodes_layer.get_state_node(default_state)
 		
 		remove_transition(entry_node, 0, state_node, 0)
-
+	
 	create_new_transition(entry_node, 0, p_state_node, 0)
 	
 func create_new_state(p_offset : Vector2, p_state_script : GDScript):
@@ -265,7 +282,7 @@ func create_new_state(p_offset : Vector2, p_state_script : GDScript):
 	if superstate == null:
 		superstate = graph.add_superstate(p_state_script) as StateMachine.Graph.Superstate
 	
-	var state = graph.add_state(superstate, p_offset, {})
+	var state = graph.add_state(superstate, p_offset, {}) as StateMachine.Graph.State
 	
 	nodes_layer.add_state_node(state)
 	

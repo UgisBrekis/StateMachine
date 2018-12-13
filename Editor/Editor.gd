@@ -13,13 +13,15 @@ var active_state_machine : StateMachine = null setget set_active_state_machine
 # Dependencies
 var editor_interface : EditorInterface = null
 var editor_selection : EditorSelection = null
+var undo_redo : UndoRedo = null
 
 # Signals
 signal attention_request
 
-func _init(p_editor_interface : EditorInterface):
+func _init(p_editor_interface : EditorInterface, p_undo_redo : UndoRedo):
 	editor_interface = p_editor_interface as EditorInterface
 	editor_selection = editor_interface.get_selection() as EditorSelection
+	undo_redo = p_undo_redo as UndoRedo
 
 	theme = editor_interface.get_base_control().theme
 	EditorTheme.create_editor_theme(theme)
@@ -28,6 +30,8 @@ func _init(p_editor_interface : EditorInterface):
 
 func _enter_tree():
 	connect_signals()
+	
+	graph_editor.undo_redo = undo_redo
 
 func _exit_tree():
 	disconnect_signals()
@@ -65,7 +69,7 @@ func apply_changes():
 
 	if active_state_machine.graph == null:
 		return
-
+		
 	for superstate in active_state_machine.graph.superstates:
 		superstate.update_property_cache()
 

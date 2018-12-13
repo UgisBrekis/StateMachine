@@ -6,7 +6,7 @@ const Editor = preload("Editor/Editor.gd")
 var editor : Editor = null
 
 func _enter_tree():
-	editor = Editor.new(get_editor_interface())
+	editor = Editor.new(get_editor_interface(), get_undo_redo())
 	
 	add_control_to_bottom_panel(editor, "State Machine")
 	

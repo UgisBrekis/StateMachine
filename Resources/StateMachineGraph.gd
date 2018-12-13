@@ -21,6 +21,8 @@ func set_default_state(p_state : State):
 	if p_state == null:
 		_default_state = null
 		_default_transition_reroute_points.resize(0)
+		
+		property_list_changed_notify()
 		return
 	
 	if !states.has(p_state):
@@ -28,6 +30,8 @@ func set_default_state(p_state : State):
 	
 	_default_state = p_state
 	_default_transition_reroute_points.resize(0)
+	
+	property_list_changed_notify()
 	
 func add_superstate(p_state_script : GDScript, p_outputs : PoolStringArray = PoolStringArray()) -> Superstate:
 	var superstate_resource = Superstate.new()
@@ -40,6 +44,8 @@ func add_superstate(p_state_script : GDScript, p_outputs : PoolStringArray = Poo
 	
 	update_superstates()
 	
+	property_list_changed_notify()
+	
 	return superstate
 	
 func add_state(p_superstate : Superstate, p_offset : Vector2, p_properties : Dictionary) -> State:
@@ -49,13 +55,19 @@ func add_state(p_superstate : Superstate, p_offset : Vector2, p_properties : Dic
 	state.superstate = p_superstate
 	state.offset = p_offset
 	state.properties = p_properties
+	
+	state.on_property_cache_changed()
 
 	states.push_back(state)
+	
+	property_list_changed_notify()
 	
 	return state
 	
 func duplicate_state(p_state : State, p_offset : Vector2) -> State:
 	var state : State = add_state(p_state.superstate, p_offset, p_state.properties.duplicate())
+	
+	property_list_changed_notify()
 	
 	return state
 	
@@ -72,6 +84,8 @@ func remove_state(p_state : State):
 		superstates.erase(p_state.superstate)
 		
 		update_superstates()
+		
+	property_list_changed_notify()
 	
 func get_state(p_index : int):
 	if states.size() == 0:
@@ -99,6 +113,8 @@ func add_transition(p_from_state : State, p_from_slot_index : int, p_to_state : 
 	
 	transitions.push_back(transition)
 	
+	property_list_changed_notify()
+	
 	return transition
 	
 func remove_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
@@ -108,6 +124,8 @@ func remove_transition(p_from_state : State, p_from_slot_index : int, p_to_state
 		return ERR_DOES_NOT_EXIST
 		
 	transitions.erase(transition)
+	
+	property_list_changed_notify()
 	
 	return OK
 
@@ -170,6 +188,8 @@ func get_state_script_list() -> Array:
 	
 func update_reroute_points(p_transition : Transition, p_reroute_points : PoolVector2Array):
 	p_transition.reroute_points = p_reroute_points
+	
+	property_list_changed_notify()
 	
 func update_superstates():
 	var state_script_list : Array = get_state_script_list()
