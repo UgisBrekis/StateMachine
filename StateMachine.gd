@@ -23,7 +23,7 @@ func _set(property, value):
 		
 	if Engine.editor_hint:
 		if active_state != null:
-			for cached_item in active_state.property_cache:
+			for cached_item in active_state.superstate.property_cache:
 				if property == "Selected state/%s" % [cached_item.name]:
 					active_state.properties[cached_item.name] = value
 					
@@ -36,7 +36,7 @@ func _get(property):
 	
 	if Engine.editor_hint:
 		if active_state != null:
-			for cached_item in active_state.property_cache:
+			for cached_item in active_state.superstate.property_cache:
 				if property == "Selected state/%s" % [cached_item.name]:
 					return active_state.properties[cached_item.name]
 	
@@ -58,7 +58,7 @@ func _get_property_list():
 	if active_state == null:
 		return property_list
 		
-	for cached_item in active_state.property_cache:
+	for cached_item in active_state.superstate.property_cache:
 		var property = {
 			"name" : "Selected state/%s" % [cached_item.name],
 			"type" : cached_item.type,
@@ -82,10 +82,12 @@ func start(p_args = []):
 	if graph == null:
 		return
 		
-	if graph.start_state_id == -1:
+	var default_state : Graph.State = graph.get_default_state()
+		
+	if default_state == null:
 		return
 		
-	instantiate_next_state(graph.states[graph.start_state_id], p_args)
+	instantiate_next_state(default_state, p_args)
 	
 	emit_signal("started")
 	
@@ -110,19 +112,15 @@ func on_transition_requested(p_output, p_args : Array = []):
 	
 	match typeof(p_output):
 		TYPE_INT:
-			if p_output in range(active_state.outputs.size()):
+			if p_output in range(active_state.superstate.outputs.size()):
 				output_index = p_output
 				
 		TYPE_STRING:
-			for i in active_state.outputs.size():
-				if p_output == active_state.outputs[i]:
+			for i in active_state.superstate.outputs.size():
+				if p_output == active_state.superstate.outputs[i]:
 					output_index = i
 			
 					break
-					
-		_:
-			stop()
-			return
 		
 	if output_index == -1:
 		print("State machine :: Output[ %s ] does not exist" % [p_output])
@@ -149,13 +147,13 @@ func on_transition_requested(p_output, p_args : Array = []):
 	
 func instantiate_next_state(p_state : Graph.State, p_args : Array = []):
 	# Check if the script is attached to the next state
-	if p_state.state_script == null:
+	if p_state.superstate.state_script == null:
 		stop()
 		return
 		
 	active_state = p_state
 	
-	active_state_instance = active_state.state_script.new()
+	active_state_instance = active_state.superstate.state_script.new()
 	
 	add_child(active_state_instance)
 		

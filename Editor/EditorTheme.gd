@@ -32,12 +32,8 @@ static func create_editor_theme(p_theme : Theme):
 	p_theme.set_constant("state_node_slot_separation", "Editor", 8 * scale)
 	
 	var sb = StyleBoxFlat.new()
-	
-	if dark_theme:
-		sb.bg_color = Color(0, 0, 0, 0.75)
 		
-	else:
-		sb.bg_color = Color(0.75, 0.75, 0.75, 0.75)
+	sb.bg_color = base_color
 	
 	sb.border_color = dark_color_3
 	
@@ -50,7 +46,7 @@ static func create_editor_theme(p_theme : Theme):
 	
 	# Header
 	sb = StyleBoxFlat.new()
-	sb.bg_color = base_color
+	sb.bg_color = dark_color_3
 	
 	sb.content_margin_bottom = 2 * scale
 	sb.content_margin_left = 4 * scale
@@ -66,6 +62,9 @@ static func create_editor_theme(p_theme : Theme):
 	sb.content_margin_top = 2 * scale
 	
 	p_theme.set_stylebox("state_node_slot", "Editor", sb)
+	
+	# Slot socket
+	p_theme.set_icon("state_machine_editor_socket", "EditorIcons", create_socket_texture(p_theme))
 	
 	# Focus
 	sb = StyleBoxFlat.new()
@@ -89,3 +88,23 @@ static func create_editor_theme(p_theme : Theme):
 	var connection_width = 4.0 * scale
 	p_theme.set_constant("graph_editor_connection_width", "Editor", 4 * scale)
 	p_theme.set_constant("graph_editor_connection_curvature", "Editor", 100 * scale)
+	
+static func create_socket_texture(p_theme : Theme) -> ImageTexture:
+	var image : Image = p_theme.get_icon("VisualShaderPort", "EditorIcons").get_data()
+	var size : Vector2 = image.get_size()
+	
+	image.lock()
+	
+	for x in size.x:
+		for y in size.y:
+			var alpha = image.get_pixel(x, y).a
+			
+			image.set_pixel(x, y, Color(1, 1, 1, alpha))
+			
+	image.unlock()
+	
+	var socket_texture = ImageTexture.new()
+	
+	socket_texture.create_from_image(image)
+	
+	return socket_texture

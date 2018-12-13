@@ -1,40 +1,74 @@
 tool
 extends Resource
 
-export(String) var label = "New state" setget set_state_label
-export(GDScript) var state_script = null setget set_state_script
-export(PoolStringArray) var outputs = PoolStringArray() setget set_outputs
+const SuperState = preload("SuperState.gd")
 
-var offset = Vector2()
-var properties = {}
+var superstate : SuperState setget set_superstate, get_superstate
+var offset : Vector2 setget set_offset, get_offset
+var properties : Dictionary = {} setget set_properties, get_properties
 
-var property_cache = []
-
-# Signals
-signal renamed
-signal state_script_changed
-signal outputs_changed
-
-func _get(property):
-	match property:
-		"offset":
-			return offset
-			
-		"properties":
-			return properties
+func set_superstate(p_superstate : SuperState):
+	superstate = p_superstate
 	
-func _set(property, value):
-	match property:
-		"offset":
-			offset = value
-			return true
-			
-		"properties":
-			properties = value
-			return true
+	if superstate == null:
+		return
 	
+	superstate.connect("property_cache_changed", self, "on_property_cache_changed")
+	
+func get_superstate() -> SuperState:
+	return superstate
+	
+func set_offset(p_offset : Vector2):
+	offset = p_offset
+	
+func get_offset() -> Vector2:
+	return offset
+	
+func set_properties(p_properties : Dictionary):
+	properties = p_properties
+	
+func get_properties() -> Dictionary:
+	return properties
+	
+func on_property_cache_changed():
+	_update_properties_from_cache(superstate.property_cache)
+	
+func _update_properties_from_cache(p_property_cache : Array):	
+	var redundant_keys : PoolStringArray = PoolStringArray()
+	
+	# Collect redundant keys and erase them
+	for key in properties.keys():
+		var is_redundant : bool = true
+		
+		for cached_item in p_property_cache:
+			if key == cached_item.name:
+				is_redundant = false
+				
+				break
+				
+		if is_redundant:
+			redundant_keys.push_back(key)
+	
+	for key in redundant_keys:
+		properties.erase(key)
+	
+	# Apply default values
+	for cached_item in p_property_cache:
+		if !(properties.has(cached_item.name)):
+			properties[cached_item.name] = cached_item.default_value
+			
+		else:
+			if typeof(properties[cached_item.name]) != cached_item.type:
+				properties[cached_item.name] = cached_item.default_value
+
 func _get_property_list():
 	var property_list = []
+	
+	property_list.push_back({
+		"name" : "superstate",
+		"type" : TYPE_OBJECT,
+		"usage" : PROPERTY_USAGE_STORAGE
+	})
 	
 	property_list.push_back({
 		"name" : "offset",
@@ -49,64 +83,3 @@ func _get_property_list():
 	})
 	
 	return property_list
-
-func set_state_label(p_label):
-	label = p_label
-	
-	emit_signal("renamed")
-
-func set_state_script(p_script):
-	state_script = p_script
-	
-	update_property_cache()
-	
-	emit_signal("state_script_changed")
-	
-func set_outputs(p_outputs : PoolStringArray):
-	outputs = p_outputs
-	
-	emit_signal("outputs_changed")
-	
-func update_property_cache():
-	if state_script == null:
-		return
-		
-	var instance = state_script.new()
-	var instance_property_list = []
-	
-	for property in instance.get_property_list():
-		if property.usage & PROPERTY_USAGE_DEFAULT && property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
-			instance_property_list.push_back(property.duplicate())
-			
-	# Update cache
-	property_cache = instance_property_list
-	
-	# Remove redundant properties
-	var redundant_keys : PoolStringArray = PoolStringArray()
-	
-	for key in properties.keys():
-		var is_redundant : bool = true
-		
-		for cached_item in property_cache:
-			if key == cached_item.name:
-				is_redundant = false
-				break
-				
-		if is_redundant:
-			redundant_keys.push_back(key)
-			
-	for key in redundant_keys:
-		properties.erase(key)
-	
-	# Apply values?
-	for cached_item in property_cache:
-		if !properties.has(cached_item.name):
-			properties[cached_item.name] = null
-			
-		else:
-			if typeof(properties[cached_item.name]) != cached_item.type:
-				properties[cached_item.name] = instance.get(cached_item.name)
-
-	# Clean up
-	instance.queue_free()
-	

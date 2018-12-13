@@ -77,6 +77,8 @@ func set_graph(p_graph : StateMachine.Graph):
 	
 	populate_graph(graph)
 	
+	graph.update_superstates()
+	
 func set_disabled(p_disabled : bool):
 	disabled = p_disabled
 	
@@ -184,6 +186,8 @@ func on_overlay_layer_selection_box_drag_completed(p_rect : Rect2):
 	nodes_layer.box_select(p_rect)
 		
 func on_state_scripts_dropped(p_state_scripts):
+	nodes_layer.clear_selection()
+	
 	var root_position = layers_container.get_local_mouse_position() / display_scale
 	var position_step = Vector2(20, 20) * display_scale
 	
@@ -202,7 +206,7 @@ func on_popup_menu_id_pressed(p_id):
 			if !(nodes_layer.selection[0] is GraphEditorStateNode):
 				return
 			
-			set_start_state(nodes_layer.selection[0])
+			set_default_state(nodes_layer.selection[0])
 			
 		PopupMenuIDs.DUPLICATE_STATE:
 			var position_offset = Vector2(20, 20) * display_scale
@@ -227,32 +231,49 @@ func on_popup_menu_id_pressed(p_id):
 				
 			states_to_remove.clear()
 	
-func set_start_state(p_state_node : GraphEditorStateNode):
+func set_default_state(p_state_node : GraphEditorStateNode):
 	if graph == null:
 		return
 
 	var entry_node = nodes_layer.get_entry_node()
 
 	# Disconnect present default node if it's set
-	if graph.start_state_id != -1:
-		var default_state = graph.states[graph.start_state_id]
+	var default_state = graph.get_default_state()
+	
+	if default_state != null:
 		var state_node = nodes_layer.get_state_node(default_state)
 		
 		remove_transition(entry_node, 0, state_node, 0)
 
 	create_new_transition(entry_node, 0, p_state_node, 0)
 	
-func create_new_state(p_position : Vector2, p_state_script : GDScript):
+func create_new_state(p_offset : Vector2, p_state_script : GDScript):
 	if graph == null:
 		return
-
-	nodes_layer.add_state_node(graph.add_state(p_position, p_state_script))
+		
+	var superstate : StateMachine.Graph.Superstate
 	
-func duplicate_state(p_state : StateMachine.Graph.State, p_position : Vector2):
+	if p_state_script != null:
+		for item in graph.superstates:
+			item = item as StateMachine.Graph.Superstate
+			
+			if item.state_script == p_state_script:
+				superstate = item
+				
+				break
+			
+	if superstate == null:
+		superstate = graph.add_superstate(p_state_script) as StateMachine.Graph.Superstate
+	
+	var state = graph.add_state(superstate, p_offset, {})
+	
+	nodes_layer.add_state_node(state)
+	
+func duplicate_state(p_state : StateMachine.Graph.State, p_offset : Vector2):
 	if graph == null:
 		return
 
-	nodes_layer.add_state_node(graph.duplicate_state(p_state, p_position))
+	nodes_layer.add_state_node(graph.duplicate_state(p_state, p_offset))
 	
 func remove_state(p_state : StateMachine.Graph.State):
 	if graph == null:
@@ -284,8 +305,8 @@ func remove_state(p_state : StateMachine.Graph.State):
 	redundant_transitions.clear()
 
 	# If state is set as start state, reset it to none
-	if graph.states[graph.start_state_id] == p_state:
-		graph.start_state_id = -1
+	if graph.get_default_state() == p_state:
+		graph.set_default_state(null)
 
 	# Get graph editor state node and remove connections
 	var state_node : GraphEditorStateNode = nodes_layer.get_state_node(p_state)
@@ -307,7 +328,7 @@ func create_new_transition(p_from : GraphEditorNode, p_from_index : int, p_to : 
 		return
 
 	if p_from is GraphEditorEntryNode && p_to is GraphEditorStateNode:
-		graph.set_state_as_default(p_to.state)
+		graph.set_default_state(p_to.state)
 		
 	elif p_from is GraphEditorStateNode && p_to is GraphEditorStateNode:
 		graph.add_transition(p_from.state, p_from_index, p_to.state, p_to_index)
@@ -323,7 +344,7 @@ func remove_transition(p_from : GraphEditorNode, p_from_index : int, p_to : Grap
 
 	# If start node is being disconnected from entry
 	if p_from is GraphEditorEntryNode && p_to is GraphEditorStateNode:
-		graph.set_state_as_default(null)
+		graph.set_default_state(null)
 		
 	elif p_from is GraphEditorStateNode && p_to is GraphEditorStateNode:
 		graph.remove_transition(p_from.state, p_from_index, p_to.state, p_to_index)
@@ -404,7 +425,9 @@ func populate_graph(p_graph : StateMachine.Graph):
 		nodes_layer.add_state_node(state)
 		
 	# Entry->Start transition
-	if p_graph.start_state_id != -1:
+	var default_state = p_graph.get_default_state()
+	
+	if default_state != null:
 		var entry_node : GraphEditorEntryNode = nodes_layer.get_entry_node()
 		var start_node : GraphEditorStateNode = null
 		
@@ -412,10 +435,10 @@ func populate_graph(p_graph : StateMachine.Graph):
 			if !(child is GraphEditorStateNode):
 				continue
 				
-			var state_node = child as GraphEditorStateNode
+			child = child as GraphEditorStateNode
 			
-			if state_node.state == p_graph.states[p_graph.start_state_id]:
-				start_node = state_node
+			if child.state == default_state:
+				start_node = child
 				break
 				
 		if entry_node != null && start_node != null:

@@ -19,9 +19,9 @@ func initialize(p_state : State):
 	# Apply properties
 	display_scale = theme.get_constant("scale", "Editor")
 	self.offset = state.offset
-	self.title = state.label
+	self.title = state.superstate.name
 	
-	if state.state_script == null:
+	if state.superstate.state_script == null:
 		warning_button.show()
 	else:
 		warning_button.hide()
@@ -34,10 +34,10 @@ func initialize(p_state : State):
 
 	# Connect signals
 	connect("offset_changed", self, "on_offset_changed")
-
-	state.connect("renamed", self, "on_state_renamed")
-	state.connect("state_script_changed", self, "on_state_script_changed")
-	state.connect("outputs_changed", self, "on_state_outputs_changed")
+	
+	state.superstate.connect("renamed", self, "on_state_renamed")
+	state.superstate.connect("state_script_changed", self, "on_state_script_changed")
+	state.superstate.connect("outputs_changed", self, "on_state_outputs_changed")
 
 func dispose():
 	print("Remove this graph editor node")
@@ -52,13 +52,13 @@ func on_state_renamed():
 	if state == null:
 		return
 
-	self.title = state.label
+	self.title = state.superstate.name
 
 func on_state_script_changed():
 	if state == null:
 		return
 		
-	if state.state_script == null:
+	if state.superstate.state_script == null:
 		warning_button.show()
 	else:
 		warning_button.hide()
@@ -72,7 +72,7 @@ func on_state_outputs_changed():
 func update_outputs():
 	remove_all_output_slots()
 	
-	for output in state.outputs:
+	for output in state.superstate.outputs:
 		add_output_slot(2, Color.coral, output)
 		
 	emit_signal("outputs_updated")

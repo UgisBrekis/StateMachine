@@ -1,84 +1,75 @@
 tool
 extends Resource
 
+const Superstate = preload("SuperState.gd")
 const State = preload("State.gd")
 const Transition = preload("Transition.gd")
 
-export(Vector2) var entry_node_offset = Vector2()
+var entry_node_offset : Vector2
 
-export(int) var start_state_id = -1
+var _default_state : State
+var _default_transition_reroute_points : PoolVector2Array
 
+export(Array) var superstates = []
 export(Array) var states = []
 export(Array) var transitions = []
-
-func set_state_as_default(p_state : State):
-	if !states.has(p_state):
-		start_state_id = -1
-		return
 	
+func get_default_state() -> State:
+	return _default_state
+
+func set_default_state(p_state : State):
 	if p_state == null:
-		start_state_id = -1
+		_default_state = null
+		_default_transition_reroute_points.resize(0)
 		return
 	
-	for i in states.size():
-		if p_state == states[i]:
-			start_state_id = i
-			break
+	if !states.has(p_state):
+		return
+	
+	_default_state = p_state
+	_default_transition_reroute_points.resize(0)
+	
+func add_superstate(p_state_script : GDScript, p_outputs : PoolStringArray = PoolStringArray()) -> Superstate:
+	var superstate = Superstate.new() as Superstate
+	
+	superstate.state_script = p_state_script
+	superstate.outputs = p_outputs
+	
+	superstates.push_back(superstate)
+	
+	update_superstates()
+	
+	return superstate
+	
+func add_state(p_superstate : Superstate, p_offset : Vector2, p_properties : Dictionary) -> State:
+	var state = State.new() as State
+	
+	state.superstate = p_superstate
+	state.offset = p_offset
+	state.properties = p_properties
 
-func add_state(p_position : Vector2, p_script : GDScript) -> State:
-	var new_state = State.new().duplicate() as State
+	states.push_back(state)
 	
-	new_state.offset = p_position
-
-	if p_script != null:
-		new_state.state_script = p_script
-
-		# Filename as state name
-		var extension = p_script.resource_path.get_extension()
-		var file_name = p_script.resource_path.get_file()
-		new_state.label = file_name.rstrip(".%s" % [extension])
-		
-	states.push_back(new_state)
+	return state
 	
-	return new_state
+func duplicate_state(p_state : State, p_offset : Vector2) -> State:
+	var state : State = add_state(p_state.superstate, p_offset, p_state.properties.duplicate())
 	
-func duplicate_state(p_state : State, p_position : Vector2) -> State:
-	var new_state = State.new().duplicate() as State
-	
-	new_state.offset = p_position
-	new_state.state_script = p_state.state_script
-	new_state.outputs = p_state.outputs
-	new_state.properties = p_state.properties.duplicate()
-	
-	states.push_back(new_state)
-	
-	return new_state
+	return state
 	
 func remove_state(p_state : State):
-	if !(p_state is State):
-		return ERR_INVALID_PARAMETER
-		
-	if !(p_state in states):
+	if !states.has(p_state):
 		return ERR_DOES_NOT_EXIST
-		
-	# Find index
-	var previous_index = -1
-		
-	for i in states.size():
-		if p_state == states[i]:
-			previous_index = i
-			break
-			
-	if previous_index == -1:
-		return ERR_BUG
-		
+	
+	if _default_state == p_state:
+		set_default_state(null)
+	
 	states.erase(p_state)
 	
-	# Update start state id
-	if start_state_id > previous_index:
-		start_state_id = max(-1, start_state_id - 1)
-	
-	return OK
+	if _is_superstate_redundant(p_state.superstate):
+		superstates.erase(p_state.superstate)
+		
+		update_superstates()
 	
 func get_state(p_index : int):
 	if states.size() == 0:
@@ -116,16 +107,7 @@ func remove_transition(p_from_state : State, p_from_slot_index : int, p_to_state
 	transitions.erase(transition)
 	
 	return OK
-	
-func reassign_transition(p_transition, p_from_slot_index : int, p_to_slot_index : int):
-	if !transitions.has(p_transition):
-		return ERR_DOES_NOT_EXIST
-		
-	p_transition.from_slot_index = p_from_slot_index
-	p_transition.to_slot_index = p_to_slot_index
-	
-	return OK
-	
+
 func get_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
 	for transition in transitions:
 		transition = transition as Transition
@@ -170,5 +152,58 @@ func get_incomming_connections(p_to_state : State, p_to_slot_index : int):
 			
 	return connections
 	
+func get_state_script_list() -> Array:
+	var state_script_list : Array = []
+	
+	for superstate in superstates:
+		superstate = superstate as Superstate
+		
+		if superstate.state_script == null:
+			continue
+			
+		state_script_list.push_back(superstate.state_script)
+	
+	return state_script_list
+	
 func update_reroute_points(p_transition : Transition, p_reroute_points : PoolVector2Array):
 	p_transition.reroute_points = p_reroute_points
+	
+func update_superstates():
+	var state_script_list : Array = get_state_script_list()
+	
+	for superstate in superstates:
+		superstate = superstate as Superstate
+		
+		superstate.set_graph_state_scripts_list(state_script_list)
+		
+func _is_superstate_redundant(p_superstate : Superstate) -> bool:
+	for state in states:
+		state = state as State
+		
+		if state.superstate == p_superstate:
+			return false
+		
+	return true
+	
+func _get_property_list():
+	var property_list = []
+	
+	property_list.push_back({
+		"name" : "entry_node_offset",
+		"type" : TYPE_VECTOR2,
+		"usage" : PROPERTY_USAGE_STORAGE
+	})
+	
+	property_list.push_back({
+		"name" : "_default_state",
+		"type" : TYPE_OBJECT,
+		"usage" : PROPERTY_USAGE_STORAGE
+	})
+	
+	property_list.push_back({
+		"name" : "_default_transition_reroute_points",
+		"type" : TYPE_VECTOR2_ARRAY,
+		"usage" : PROPERTY_USAGE_STORAGE
+	})
+	
+	return property_list

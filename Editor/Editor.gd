@@ -66,8 +66,8 @@ func apply_changes():
 	if active_state_machine.graph == null:
 		return
 		
-	for state in active_state_machine.graph.states:
-		state.update_property_cache()
+	for superstate in active_state_machine.graph.superstates:
+		superstate.update_property_cache()
 
 func on_header_button_graph_id_pressed(p_id : int):
 	match p_id:
@@ -146,11 +146,11 @@ func on_inspect_state_request(p_state : StateMachine.Graph.State):
 		return
 
 	# Show state script
-	if p_state.state_script != null:
-		editor_interface.inspect_object(p_state.state_script)
+	if p_state.superstate.state_script != null:
+		editor_interface.inspect_object(p_state.superstate.state_script)
 
 	# Show state properties in inspector
-	editor_interface.inspect_object(p_state)
+	editor_interface.inspect_object(p_state.superstate)
 
 func on_graph_edited():
 	if active_state_machine == null:

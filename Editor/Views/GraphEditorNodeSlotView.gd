@@ -14,7 +14,7 @@ func initialize_view():
 	socket.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	socket.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
-	socket.texture = theme.get_icon("VisualShaderPort", "EditorIcons")
+	socket.texture = theme.get_icon("state_machine_editor_socket", "EditorIcons")
 	
 	container.add_child(socket)
 	
