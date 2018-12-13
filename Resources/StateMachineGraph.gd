@@ -30,7 +30,8 @@ func set_default_state(p_state : State):
 	_default_transition_reroute_points.resize(0)
 	
 func add_superstate(p_state_script : GDScript, p_outputs : PoolStringArray = PoolStringArray()) -> Superstate:
-	var superstate = Superstate.new() as Superstate
+	var superstate_resource = Superstate.new()
+	var superstate = superstate_resource.duplicate() as Superstate
 	
 	superstate.state_script = p_state_script
 	superstate.outputs = p_outputs
@@ -42,7 +43,8 @@ func add_superstate(p_state_script : GDScript, p_outputs : PoolStringArray = Poo
 	return superstate
 	
 func add_state(p_superstate : Superstate, p_offset : Vector2, p_properties : Dictionary) -> State:
-	var state = State.new() as State
+	var state_resource = State.new()
+	var state = state_resource.duplicate() as State
 	
 	state.superstate = p_superstate
 	state.offset = p_offset
@@ -86,8 +88,9 @@ func add_transition(p_from_state : State, p_from_slot_index : int, p_to_state : 
 		
 	if !states.has(p_from_state) || !states.has(p_to_state) :
 		return null
-		
-	var transition : Transition = Transition.new()
+	
+	var transition_resource = Transition.new()
+	var transition = transition_resource.duplicate() as Transition
 	
 	transition.from_state = p_from_state
 	transition.from_slot_index = p_from_slot_index

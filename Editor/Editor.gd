@@ -65,7 +65,7 @@ func apply_changes():
 
 	if active_state_machine.graph == null:
 		return
-		
+
 	for superstate in active_state_machine.graph.superstates:
 		superstate.update_property_cache()
 
@@ -99,24 +99,29 @@ func show_save_file_dialog():
 func on_file_dialog_file_selected(p_path):
 	match file_dialog.mode:
 		FileDialog.MODE_OPEN_FILE:
-			var graph_resource = ResourceLoader.load(p_path)
-
-			if !(graph_resource is StateMachine.Graph):
-				return
-
-			active_state_machine.graph = graph_resource
-			active_state_machine.property_list_changed_notify()
+			var resource = ResourceLoader.load(p_path)
 			
+			if !(resource is StateMachine.Graph):
+				print("Selected could not be loaded")
+				return
+			
+			active_state_machine.graph = resource
+			active_state_machine.property_list_changed_notify()
+
 			graph_editor.graph = active_state_machine.graph
 
 			editor_interface.inspect_object(active_state_machine)
 
 		FileDialog.MODE_SAVE_FILE:
-			ResourceSaver.save(p_path, active_state_machine.graph)
+			var err = ResourceSaver.save(p_path, active_state_machine.graph)
 
-			active_state_machine.graph = ResourceLoader.load(p_path)
+			if err != OK:
+				print("Error saving state machine graph")
+				return
+
+			active_state_machine.graph.take_over_path(p_path)
 			active_state_machine.property_list_changed_notify()
-			
+
 			graph_editor.graph = active_state_machine.graph
 
 			editor_interface.inspect_object(active_state_machine)
@@ -155,25 +160,25 @@ func on_inspect_state_request(p_state : StateMachine.Graph.State):
 func on_graph_edited():
 	if active_state_machine == null:
 		return
-		
+
 	active_state_machine.property_list_changed_notify()
 
 func create_new_state_machine_graph():
 	if active_state_machine == null:
 		return
-
+	
 	var graph_resource = StateMachine.Graph.new()
-	active_state_machine.graph = graph_resource.duplicate()
-	
+	active_state_machine.graph = graph_resource.duplicate() as StateMachine.Graph
+
 	graph_editor.graph = active_state_machine.graph
-	
+
 	active_state_machine.property_list_changed_notify()
 
 	editor_interface.inspect_object(active_state_machine)
 
 func set_active_state_machine(p_state_machine : StateMachine):
 	active_state_machine = p_state_machine
-	
+
 	graph_editor.graph = null
 
 	if active_state_machine == null:
@@ -182,10 +187,10 @@ func set_active_state_machine(p_state_machine : StateMachine):
 
 	self.disabled = false
 	emit_signal("attention_request")
-	
+
 	if active_state_machine.graph == null:
 		return
-	
+
 	graph_editor.graph = active_state_machine.graph
 
 	graph_editor.snapping_enabled = snap_toggle.pressed
