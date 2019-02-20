@@ -96,6 +96,8 @@ func stop():
 		active_state_instance.disconnect("transition_requested", self, "on_transition_requested")
 		active_state_instance.on_stop()
 		active_state_instance.queue_free()
+		
+		active_state_instance = null
 	
 	active_state = null
 	
