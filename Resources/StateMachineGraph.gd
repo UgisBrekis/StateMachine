@@ -130,8 +130,8 @@ func remove_transition(p_from_state : State, p_from_slot_index : int, p_to_state
 	return OK
 
 func get_transition(p_from_state : State, p_from_slot_index : int, p_to_state : State, p_to_slot_index : int):
-	for transition in transitions:
-		transition = transition as Transition
+	for i in transitions.size():
+		var transition = transitions[i] as Transition
 		if transition.from_state != p_from_state || transition.to_state != p_to_state:
 			continue
 			
@@ -143,8 +143,8 @@ func get_transition(p_from_state : State, p_from_slot_index : int, p_to_state : 
 func get_attached_connections(p_state : State):
 	var connections = []
 	
-	for transition in transitions:
-		transition = transition as Transition
+	for i in transitions.size():
+		var transition = transitions[i] as Transition
 		
 		if transition.from_state == p_state || transition.to_state == p_state:
 			connections.push_back(transition)
@@ -154,8 +154,8 @@ func get_attached_connections(p_state : State):
 func get_outgoing_connections(p_from_state : State, p_from_slot_index : int):
 	var connections = []
 	
-	for transition in transitions:
-		transition = transition as Transition
+	for i in transitions.size():
+		var transition = transitions[i] as Transition
 		
 		if transition.from_state == p_from_state && transition.from_slot_index == p_from_slot_index:
 			connections.push_back(transition)
@@ -165,8 +165,8 @@ func get_outgoing_connections(p_from_state : State, p_from_slot_index : int):
 func get_incomming_connections(p_to_state : State, p_to_slot_index : int):
 	var connections = []
 	
-	for transition in transitions:
-		transition = transition as Transition
+	for i in transitions.size():
+		var transition = transitions[i] as Transition
 		
 		if transition.to_state == p_to_state && transition.to_slot_index == p_to_slot_index:
 			connections.push_back(transition)
@@ -176,8 +176,8 @@ func get_incomming_connections(p_to_state : State, p_to_slot_index : int):
 func get_state_script_list() -> Array:
 	var state_script_list : Array = []
 	
-	for superstate in superstates:
-		superstate = superstate as Superstate
+	for i in superstates.size():
+		var superstate = superstates[i] as Superstate
 		
 		if superstate.state_script == null:
 			continue
@@ -194,14 +194,14 @@ func update_reroute_points(p_transition : Transition, p_reroute_points : PoolVec
 func update_superstates():
 	var state_script_list : Array = get_state_script_list()
 	
-	for superstate in superstates:
-		superstate = superstate as Superstate
+	for i in superstates.size():
+		var superstate = superstates[i] as Superstate
 		
 		superstate.set_graph_state_scripts_list(state_script_list)
 		
 func _is_superstate_redundant(p_superstate : Superstate) -> bool:
-	for state in states:
-		state = state as State
+	for i in states.size():
+		var state = states[i] as State
 		
 		if state.superstate == p_superstate:
 			return false

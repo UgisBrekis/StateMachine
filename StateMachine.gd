@@ -135,8 +135,8 @@ func on_transition_requested(p_output, p_args : Array = []):
 	active_state_instance.queue_free()
 	
 	# Find next state index
-	for transition in graph.transitions:
-		transition = transition as Graph.Transition
+	for i in graph.transitions.size():
+		var transition = graph.transitions[i] as Graph.Transition
 		
 		if transition.from_state == active_state && transition.from_slot_index == output_index:
 			# Transition found, try to instantiate next state

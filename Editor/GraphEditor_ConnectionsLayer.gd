@@ -79,8 +79,8 @@ func set_snapping_enabled(p_snapping_enabled : bool):
 	if snapping_enabled:
 		snap_distance = grid_cell_size
 	
-	for connection in get_children():
-		connection = connection as Connection
+	for child in get_children():
+		var connection = child as Connection
 		
 		connection.snap_distance = snap_distance
 

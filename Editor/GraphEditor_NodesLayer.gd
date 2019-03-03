@@ -32,8 +32,8 @@ func set_snapping_enabled(p_snapping_enabled : bool):
 	if snapping_enabled:
 		snap_distance = grid_cell_size
 	
-	for node in get_children():
-		node = node as GraphEditorNode
+	for child in get_children():
+		var node = child as GraphEditorNode
 		
 		node.snap_distance = snap_distance
 
@@ -105,22 +105,22 @@ func clear():
 		child.free()
 		
 func box_select(p_rect : Rect2):
-	for node in get_children():
-		node = node as GraphEditorNode
+	for child in get_children():
+		var node = child as GraphEditorNode
 		
 		if p_rect.intersects(node.get_rect()):
 			add_to_selection(node)
 	
 func box_deselect(p_rect : Rect2):
-	for node in get_children():
-		node = node as GraphEditorNode
+	for child in get_children():
+		var node = child as GraphEditorNode
 		
 		if p_rect.intersects(node.get_rect()):
 			remove_from_selection(node)
 		
 func select_node(p_node : GraphEditorNode):
-	for node in selection:
-		node = node as GraphEditorNode
+	for i in selection.size():
+		var node = selection[i] as GraphEditorNode
 		
 		node.is_selected = false
 		
@@ -150,8 +150,8 @@ func remove_from_selection(p_node : GraphEditorNode):
 	emit_signal("selection_changed")
 	
 func clear_selection():
-	for node in selection:
-		node = node as GraphEditorNode
+	for i in selection.size():
+		var node = selection[i] as GraphEditorNode
 		node.is_selected = false
 		
 	selection.clear()
@@ -185,10 +185,10 @@ func on_state_node_doubleclicked(p_node : GraphEditorStateNode):
 	emit_signal("inspect_state_request", p_node.state)
 	
 func on_graph_node_drag_request(p_relative_position : Vector2):
-	for node in selection:
-		var graph_editor_node = node as GraphEditorNode
+	for i in selection.size():
+		var node = selection[i] as GraphEditorNode
 		
-		graph_editor_node.offset += p_relative_position
+		node.offset += p_relative_position
 		
 	emit_signal("dragged", p_relative_position)
 		
@@ -215,8 +215,8 @@ func get_valid_connection_types(p_is_input : bool, p_type : int):
 func get_socket_positions(p_valid_types : PoolIntArray = PoolIntArray()):
 	var socket_positions : PoolVector2Array = PoolVector2Array()
 	
-	for node in get_children():
-		node = node as GraphEditorNode
+	for child in get_children():
+		var node = child as GraphEditorNode
 		
 		var input_slot_count = node.get_input_slot_count()
 		var output_slot_count = node.get_output_slot_count()

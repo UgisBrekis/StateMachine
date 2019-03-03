@@ -271,8 +271,8 @@ func create_new_state(p_offset : Vector2, p_state_script : GDScript):
 	var superstate : StateMachine.Graph.Superstate
 	
 	if p_state_script != null:
-		for item in graph.superstates:
-			item = item as StateMachine.Graph.Superstate
+		for i in graph.superstates.size():
+			var item = graph.superstates[i] as StateMachine.Graph.Superstate
 			
 			if item.state_script == p_state_script:
 				superstate = item
@@ -302,14 +302,14 @@ func remove_state(p_state : StateMachine.Graph.State):
 	# Remove all transitions connected to this state
 	var redundant_transitions = []
 
-	for transition in graph.transitions:
-		transition = transition as StateMachine.Graph.Transition
+	for i in graph.transitions.size():
+		var transition = graph.transitions[i] as StateMachine.Graph.Transition
 		
 		if transition.from_state == p_state || transition.to_state == p_state:
 			redundant_transitions.push_back(transition)
 
-	for transition in redundant_transitions:
-		transition = transition as StateMachine.Graph.Transition
+	for i in redundant_transitions.size():
+		var transition = redundant_transitions[i] as StateMachine.Graph.Transition
 		
 		var from_state = transition.from_state
 		var from_slot_index = transition.from_slot_index
@@ -452,18 +452,18 @@ func populate_graph(p_graph : StateMachine.Graph):
 			if !(child is GraphEditorStateNode):
 				continue
 				
-			child = child as GraphEditorStateNode
+			var node = child as GraphEditorStateNode
 			
-			if child.state == default_state:
-				start_node = child
+			if node.state == default_state:
+				start_node = node
 				break
 				
 		if entry_node != null && start_node != null:
 			connections_layer.add_new_connection(entry_node, 0, start_node, 0, PoolVector2Array())
 		
 	# State transitions
-	for transition in p_graph.transitions:
-		transition = transition as StateMachine.Graph.Transition
+	for i in p_graph.transitions.size():
+		var transition = p_graph.transitions[i] as StateMachine.Graph.Transition
 		
 		var from_state = transition.from_state
 		var to_state = transition.to_state
