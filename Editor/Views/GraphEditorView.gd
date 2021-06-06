@@ -1,7 +1,7 @@
 tool
 extends Panel
 
-const GRAPH_SHEET_SIZE = 4096
+const GRAPH_SHEET_SIZE = 8192
 
 const GraphEditorScrollContainer = preload("../GraphEditor_ScrollContainer.gd")
 
